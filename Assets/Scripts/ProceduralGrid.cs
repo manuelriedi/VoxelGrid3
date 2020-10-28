@@ -1,24 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralGrid : MonoBehaviour
 {
     Mesh mesh;
-    public GameObject cube;
-    private int cubeFallDownAxis = 0;
-    private Vector3 cubePosition = new Vector3();
+    private int fallDownAxis = 0;
     
     Vector3[] vertices;
     int[] triangles;
 
-    //grid settings
     public float cellSize = 2;
     public int gridSize;
-    public Vector3 gridOffset; //Offset of entire grid
+    public Vector3 gridOffset;
 
-    private float vertexOffset;
+    private float vOffset;
 
     
     void Awake()
@@ -26,80 +21,80 @@ public class ProceduralGrid : MonoBehaviour
         mesh = GetComponent<MeshFilter>().mesh;
     }
 
-    // Start is called before the first frame update
     void Start()
     {
-        //set array sizes
-        vertexOffset = cellSize * 0.5f;
-        
-        //Set cube size to specific cellSize
-        cube.transform.localScale = new Vector3(cellSize, cellSize, cellSize);
-        MakeDiscreteProceduralGrid();
+        vOffset = cellSize * 0.5f;
+        MakeProceduralGrid();
         UpdateMesh();
-        UpdateCubePosition(0);
+        GetRasterPosition(0);
     }
 
-    // Update is called once per frame
     private void Update()
     {
-        //Cube Position
+   
         if (Input.GetKey(KeyCode.Alpha0))
         {
-            UpdateCubePosition(0);
+            GetRasterPosition(0);
         }else if(Input.GetKey(KeyCode.Alpha1))
         {
-            UpdateCubePosition(1);
+            GetRasterPosition(1);
         }
         else if (Input.GetKey(KeyCode.Alpha2))
         {
-            UpdateCubePosition(2);
+            GetRasterPosition(2);
         }
         else if (Input.GetKey(KeyCode.Alpha3))
         {
-            UpdateCubePosition(3);
+            GetRasterPosition(3);
         }
         else if (Input.GetKey(KeyCode.Alpha4))
         {
-            UpdateCubePosition(4);
+            GetRasterPosition(4);
         }
         else if (Input.GetKey(KeyCode.Alpha5))
         {
-            UpdateCubePosition(5);
+            GetRasterPosition(5);
         }
         else if (Input.GetKey(KeyCode.Alpha6))
         {
-            UpdateCubePosition(6);
+            GetRasterPosition(6);
         }
         else if (Input.GetKey(KeyCode.Alpha7))
         {
-            UpdateCubePosition(7);
+            GetRasterPosition(7);
         }
         else if (Input.GetKey(KeyCode.Alpha8))
         {  
-            UpdateCubePosition(8);
+            GetRasterPosition(8);
         }
     }
 
-    private void UpdateCubePosition(int i)
+    private Vector3 GetRasterPosition(int i)
     {
-        //Set cube on a specifig position
-        cubePosition = vertices[i*4]; // i*4 for translation to cube verices number
-        cubePosition.x += vertexOffset;
-        cubeFallDownAxis = 0; // TODO: Set fallDownAxix as time based here.
-        cubePosition.y = vertexOffset + (cellSize * cubeFallDownAxis); 
-        cubePosition.z += vertexOffset;
-        cube.transform.position = cubePosition;
+        Vector3 pos;
+        pos = vertices[i*4]; // i*4 for translation to cube verices number
+        pos.x += vOffset;
+        fallDownAxis = 0; // TODO: Set fallDownAxix as time based here.
+        pos.y = vOffset + (cellSize * fallDownAxis); 
+        pos.z += vOffset;
+        return pos;
     }
 
-    private void CheckCurrentCubePosition()
+    public Vector3 TransToRasterPosition(Vector3 p)
     {
-        if((cubePosition.x >= -1.0f && cubePosition.z >= -1.0f) && (cubePosition.x <= 1.0f && cubePosition.z >= 1.0f))
+        if (p.x >= -vOffset && p.x <= vOffset && p.z >= -vOffset && p.z <= vOffset)
         {
-            Debug.Log("Detect cell 0");
+            Debug.Log("Cube on cell 0");
+            return GetRasterPosition(0);
+        }else if (true)
+        {
+
         }
+
+        return new Vector3(-5, 2, -5); //TODO: delete this return statement
     }
 
-    private void MakeDiscreteProceduralGrid()
+    private void MakeProceduralGrid()
     {
         //set array size
         vertices = new Vector3[gridSize * gridSize * 4];
@@ -115,13 +110,11 @@ public class ProceduralGrid : MonoBehaviour
             {
                 Vector3 cellOffset = new Vector3(x * cellSize, 0, y * cellSize); //Offset of one cell
 
-                //populate the vertices and triangles arrays
-                vertices[v + 0] = new Vector3(-vertexOffset, 0, -vertexOffset) + cellOffset + gridOffset;
-                vertices[v + 1] = new Vector3(-vertexOffset, 0, vertexOffset) + cellOffset + gridOffset;
-                vertices[v + 2] = new Vector3(vertexOffset, 0, -vertexOffset) + cellOffset + gridOffset;
-                vertices[v + 3] = new Vector3(vertexOffset, 0, vertexOffset) + cellOffset + gridOffset;
+                vertices[v + 0] = new Vector3(-vOffset, 0, -vOffset) + cellOffset + gridOffset;
+                vertices[v + 1] = new Vector3(-vOffset, 0, vOffset) + cellOffset + gridOffset;
+                vertices[v + 2] = new Vector3(vOffset, 0, -vOffset) + cellOffset + gridOffset;
+                vertices[v + 3] = new Vector3(vOffset, 0, vOffset) + cellOffset + gridOffset;
 
-                // TODO: Use this coordinates to detect mouspostion and then set the cube to the corresponding cell with UpdateCubePosition(int i) 
                 //Debug.Log("Vertices" + (v + 0) + vertices[v + 0]);
                 //Debug.Log("Vertices" + (v + 1) + vertices[v + 1]);
                 //Debug.Log("Vertices" + (v + 2) + vertices[v + 2]);

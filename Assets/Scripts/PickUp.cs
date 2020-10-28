@@ -4,20 +4,41 @@ using UnityEngine;
 
 public class PickUp : MonoBehaviour
 {
-    public GameObject go;
+    public GameObject tetromino;
+    public ProceduralGrid grid; 
 
-    void OnTriggerStay(Collider cube)
+    void OnTriggerStay(Collider o)
     {
-        if (cube.name == "Cube")
+        if (o.name == "Tetromino0")
         {
-            if (Input.GetKey(KeyCode.T)) {
-                Debug.Log("Triggered");
-                go.transform.parent = transform.parent;
-            }else if(Input.GetKey(KeyCode.Z))
+            if (Input.GetKey(KeyCode.T))
             {
-                // TODO 1: drop cube down
-                // TODO 2: pass position of cube to the ProceduralGrid.cs => It will snap the cube to the next best position. 
+                Debug.Log("Tetromino Triggered");
+                tetromino.transform.parent = transform.parent;
             }
         }
     }
+
+    public void Update()
+    {
+        if (Input.GetKey(KeyCode.Z))
+        {
+            Debug.Log("Relased Tetromino");
+            tetromino.transform.SetParent(null, true);
+            Vector3 position = tetromino.transform.position;
+
+            Vector3 rasteredPosition = grid.GetComponent<ProceduralGrid>().TransToRasterPosition(position);
+            
+            tetromino.transform.position = rasteredPosition;
+            tetromino.transform.rotation = Quaternion.LookRotation(Vector3.up);
+        }
+    }
+
+
+    
+
+
+
+  
+
 }
