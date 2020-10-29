@@ -31,9 +31,10 @@ public class Carriable : MonoBehaviour {
         }
     }
 
-    public void PickUp(Pickup newHolder) {
+    public void PickUp(Pickup newHolder, RaycastHit raycastHit) {
         cachedRotation = transform.rotation;
 
+        transform.position = raycastHit.point;
         transform.parent = newHolder.transform;
         this.holder = newHolder;
         isHeld = true;

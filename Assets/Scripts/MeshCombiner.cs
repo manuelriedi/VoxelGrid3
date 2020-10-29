@@ -4,7 +4,6 @@ using System.Linq;
 
 using UnityEngine;
 
-//[ExecuteInEditMode]
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class MeshCombiner : MonoBehaviour {
 
