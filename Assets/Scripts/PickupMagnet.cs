@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PickUp : MonoBehaviour
+public class PickupMagnet : MonoBehaviour
 {
     public GameObject tetromino;
     public ProceduralGrid grid;
