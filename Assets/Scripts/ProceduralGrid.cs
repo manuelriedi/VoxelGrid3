@@ -51,7 +51,7 @@ public class ProceduralGrid : MonoBehaviour
             cellId++;
         }
 
-        return new Vector3(-3, cellSize-vOffset, -3); //Case no cell detected
+        return new Vector3(p.x, cellSize-vOffset, p.z); //Case no cell detected
     }
 
     private void MakeProceduralGrid()
