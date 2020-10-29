@@ -26,47 +26,6 @@ public class ProceduralGrid : MonoBehaviour
         vOffset = cellSize * 0.5f;
         MakeProceduralGrid();
         UpdateMesh();
-        GetRasterPosition(0);
-    }
-
-    private void Update()
-    {
-   
-        if (Input.GetKey(KeyCode.Alpha0))
-        {
-            GetRasterPosition(0);
-        }else if(Input.GetKey(KeyCode.Alpha1))
-        {
-            GetRasterPosition(1);
-        }
-        else if (Input.GetKey(KeyCode.Alpha2))
-        {
-            GetRasterPosition(2);
-        }
-        else if (Input.GetKey(KeyCode.Alpha3))
-        {
-            GetRasterPosition(3);
-        }
-        else if (Input.GetKey(KeyCode.Alpha4))
-        {
-            GetRasterPosition(4);
-        }
-        else if (Input.GetKey(KeyCode.Alpha5))
-        {
-            GetRasterPosition(5);
-        }
-        else if (Input.GetKey(KeyCode.Alpha6))
-        {
-            GetRasterPosition(6);
-        }
-        else if (Input.GetKey(KeyCode.Alpha7))
-        {
-            GetRasterPosition(7);
-        }
-        else if (Input.GetKey(KeyCode.Alpha8))
-        {  
-            GetRasterPosition(8);
-        }
     }
 
     private Vector3 GetRasterPosition(int i)
@@ -82,16 +41,17 @@ public class ProceduralGrid : MonoBehaviour
 
     public Vector3 TransToRasterPosition(Vector3 p)
     {
-        if (p.x >= -vOffset && p.x <= vOffset && p.z >= -vOffset && p.z <= vOffset)
+        int cellId = 0;
+        for (int i = 0; i <= vertices.Length - 4; i += 4)
         {
-            Debug.Log("Cube on cell 0");
-            return GetRasterPosition(0);
-        }else if (true)
-        {
-
+            if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z)
+            {
+                return GetRasterPosition(cellId);
+            }
+            cellId++;
         }
 
-        return new Vector3(-5, 2, -5); //TODO: delete this return statement
+        return new Vector3(-3, cellSize-vOffset, -3); //Case no cell detected
     }
 
     private void MakeProceduralGrid()
