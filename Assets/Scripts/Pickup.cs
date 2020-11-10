@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-
-using UnityEngine;
-using UnityEngine.UI;
-
-using Outline = cakeslice.Outline;
+﻿using UnityEngine;
 
 public class Pickup : MonoBehaviour {
 
@@ -14,6 +6,8 @@ public class Pickup : MonoBehaviour {
     private bool itemHeld = false;
     private Carriable lastLookedAt = null;
     private bool hasLastLookedAt = false;
+
+    public ProceduralGrid grid;
 
     public float maxDistance = 10f;
     public float minDistance = 1.5f;
@@ -29,9 +23,7 @@ public class Pickup : MonoBehaviour {
             HandleMouseZoom();
 
             if (Input.GetMouseButtonUp(0) && Cursor.lockState == CursorLockMode.Locked) {
-                heldItem.DropObject();
-                heldItem = null;
-                itemHeld = false;
+                DropHeldItem();
             }
         }
         else {
@@ -62,6 +54,17 @@ public class Pickup : MonoBehaviour {
                 hasLastLookedAt = false;
             }
         }
+    }
+
+    private void DropHeldItem() {
+        heldItem.DropObject();
+        
+        var position = heldItem.transform.position;
+        heldItem.transform.position = grid.TransToRasterPosition(position);
+        //tetromino.transform.rotation = Quaternion.LookRotation(Vector3.up);
+
+        heldItem = null;
+        itemHeld = false;
     }
 
     void HandleMouseZoom() {

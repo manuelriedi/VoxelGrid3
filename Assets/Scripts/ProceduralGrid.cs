@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public class ProceduralGrid : MonoBehaviour
-{
+public class ProceduralGrid : MonoBehaviour {
+    
     Mesh mesh;
     private int fallDownAxis = 0;
-    
+
     Vector3[] vertices;
     int[] triangles;
 
@@ -15,47 +15,41 @@ public class ProceduralGrid : MonoBehaviour
 
     private float vOffset;
 
-    
-    void Awake()
-    {
+
+    void Awake() {
         mesh = GetComponent<MeshFilter>().mesh;
     }
 
-    void Start()
-    {
+    void Start() {
         vOffset = cellSize * 0.5f;
         MakeProceduralGrid();
         UpdateMesh();
     }
 
-    private Vector3 GetRasterPosition(int i)
-    {
+    private Vector3 GetRasterPosition(int i) {
         Vector3 pos;
-        pos = vertices[i*4]; // i*4 for translation to cube verices number
+        pos = vertices[i * 4]; // i*4 for translation to cube verices number
         pos.x += vOffset;
         fallDownAxis = 0; // TODO: Set fallDownAxix as time based here.
-        pos.y = vOffset + (cellSize * fallDownAxis); 
+        pos.y = vOffset + (cellSize * fallDownAxis);
         pos.z += vOffset;
         return pos;
     }
 
-    public Vector3 TransToRasterPosition(Vector3 p)
-    {
+    public Vector3 TransToRasterPosition(Vector3 p) {
         int cellId = 0;
-        for (int i = 0; i <= vertices.Length - 4; i += 4)
-        {
-            if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z)
-            {
+        for (int i = 0; i <= vertices.Length - 4; i += 4) {
+            if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z) {
                 return GetRasterPosition(cellId);
             }
+
             cellId++;
         }
 
-        return new Vector3(p.x, cellSize-vOffset, p.z); //Case no cell detected
+        return new Vector3(p.x, cellSize - vOffset, p.z); //Case no cell detected
     }
 
-    private void MakeProceduralGrid()
-    {
+    private void MakeProceduralGrid() {
         //set array size
         vertices = new Vector3[gridSize * gridSize * 4];
         triangles = new int[gridSize * gridSize * 6];
@@ -64,10 +58,8 @@ public class ProceduralGrid : MonoBehaviour
         int v = 0;
         int t = 0;
 
-        for (int x = 0; x < gridSize; x++)
-        {
-            for (int y = 0; y < gridSize; y++)
-            {
+        for (int x = 0; x < gridSize; x++) {
+            for (int y = 0; y < gridSize; y++) {
                 Vector3 cellOffset = new Vector3(x * cellSize, 0, y * cellSize); //Offset of one cell
 
                 vertices[v + 0] = new Vector3(-vOffset, 0, -vOffset) + cellOffset + gridOffset;
@@ -91,15 +83,11 @@ public class ProceduralGrid : MonoBehaviour
 
         }
     }
-
-
-    void UpdateMesh()
-    {
+    
+    void UpdateMesh() {
         mesh.Clear();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
     }
-
-
 }
