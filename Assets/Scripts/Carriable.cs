@@ -43,6 +43,9 @@ public class Carriable : MonoBehaviour {
     }
 
     public void DropObject() {
+        // Last Update
+        Update();
+
         transform.parent = initialParent;
 
         //holder.rotationHandles.transform.parent = null;

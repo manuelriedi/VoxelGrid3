@@ -17,6 +17,7 @@ public class Pickup : MonoBehaviour {
 
     public float maxDistance = 10f;
     public float minDistance = 1.5f;
+
     [Range(2.5f, 25.0f)]
     public float zoomSmoothing = 5f;
 
@@ -25,18 +26,7 @@ public class Pickup : MonoBehaviour {
     // Update is called once per frame
     private void Update() {
         if (itemHeld) {
-            var currentPos = heldItem.transform.localPosition;
-            var zDelta =
-                Mathf.Clamp(currentPos.z + Input.mouseScrollDelta.y / zoomSmoothing,
-                            minDistance, maxDistance) - currentPos.z;
-
-            heldItem.transform.Translate(
-                0, 0, zDelta,
-                this.transform
-            );
-            if (Input.GetKey(KeyCode.F)) {
-                Debug.Log(Input.mouseScrollDelta);
-            }
+            HandleMouseZoom();
 
             if (Input.GetMouseButtonUp(0) && Cursor.lockState == CursorLockMode.Locked) {
                 heldItem.DropObject();
@@ -72,6 +62,18 @@ public class Pickup : MonoBehaviour {
                 hasLastLookedAt = false;
             }
         }
+    }
+
+    void HandleMouseZoom() {
+        var currentPos = heldItem.transform.localPosition;
+        var zDelta =
+            Mathf.Clamp(currentPos.z + Input.mouseScrollDelta.y / zoomSmoothing,
+                        minDistance, maxDistance) - currentPos.z;
+
+        heldItem.transform.Translate(
+            0, 0, zDelta,
+            this.transform
+        );
     }
 
     private static bool FindInHierarchy<T>(Component c, out T component) {
