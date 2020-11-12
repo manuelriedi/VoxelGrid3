@@ -31,7 +31,7 @@ public class ProceduralGrid : MonoBehaviour {
         pos = vertices[i * 4]; // i*4 for translation to cube verices number
         pos.x += vOffset;
         fallDownAxis = 0; // TODO: Set fallDownAxix as time based here.
-        pos.y = vOffset + (cellSize * fallDownAxis);
+        pos.y = cellSize; // = vOffset + (cellSize * fallDownAxis);
         pos.z += vOffset;
         return pos;
     }
@@ -46,7 +46,7 @@ public class ProceduralGrid : MonoBehaviour {
             cellId++;
         }
 
-        return new Vector3(p.x, cellSize - vOffset, p.z); //Case no cell detected
+        return new Vector3((cellSize * gridSize+1), cellSize, p.z); //Case no cell detected
     }
 
     private void MakeProceduralGrid() {
