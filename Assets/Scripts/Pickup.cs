@@ -58,10 +58,13 @@ public class Pickup : MonoBehaviour {
 
     private void DropHeldItem() {
         heldItem.DropObject();
+
+        //Debug.Log(heldItem.transform.localScale);
         
         var position = heldItem.transform.position;
         heldItem.transform.position = grid.TransToRasterPosition(position);
         //tetromino.transform.rotation = Quaternion.LookRotation(Vector3.up);
+
 
         heldItem = null;
         itemHeld = false;

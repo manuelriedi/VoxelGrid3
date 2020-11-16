@@ -4,7 +4,7 @@
 public class ProceduralGrid : MonoBehaviour {
     
     Mesh mesh;
-    private int fallDownAxis = 0;
+    //private int fallDownAxis = 0;
 
     Vector3[] vertices;
     int[] triangles;
@@ -13,7 +13,7 @@ public class ProceduralGrid : MonoBehaviour {
     public int gridSize;
     public Vector3 gridOffset;
 
-    private float vOffset;
+    private float vertexOffset;
 
 
     void Awake() {
@@ -21,18 +21,20 @@ public class ProceduralGrid : MonoBehaviour {
     }
 
     void Start() {
-        vOffset = cellSize * 0.5f;
+        vertexOffset = cellSize * 0.5f;
         MakeProceduralGrid();
+        //MakeContiguousProceduralGrid();
         UpdateMesh();
     }
 
     private Vector3 GetRasterPosition(int i) {
+        Debug.Log("Field: " + i + " is occupied");
         Vector3 pos;
         pos = vertices[i * 4]; // i*4 for translation to cube verices number
-        pos.x += vOffset;
-        fallDownAxis = 0; // TODO: Set fallDownAxix as time based here.
+        pos.x += vertexOffset;
+        //fallDownAxis = 0; // TODO: Set fallDownAxix as time based here.
         pos.y = cellSize; // = vOffset + (cellSize * fallDownAxis);
-        pos.z += vOffset;
+        pos.z += vertexOffset;
         return pos;
     }
 
@@ -42,7 +44,6 @@ public class ProceduralGrid : MonoBehaviour {
             if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z) {
                 return GetRasterPosition(cellId);
             }
-
             cellId++;
         }
 
@@ -62,10 +63,10 @@ public class ProceduralGrid : MonoBehaviour {
             for (int y = 0; y < gridSize; y++) {
                 Vector3 cellOffset = new Vector3(x * cellSize, 0, y * cellSize); //Offset of one cell
 
-                vertices[v + 0] = new Vector3(-vOffset, 0, -vOffset) + cellOffset + gridOffset;
-                vertices[v + 1] = new Vector3(-vOffset, 0, vOffset) + cellOffset + gridOffset;
-                vertices[v + 2] = new Vector3(vOffset, 0, -vOffset) + cellOffset + gridOffset;
-                vertices[v + 3] = new Vector3(vOffset, 0, vOffset) + cellOffset + gridOffset;
+                vertices[v + 0] = new Vector3(-vertexOffset, 0, -vertexOffset) + cellOffset + gridOffset;
+                vertices[v + 1] = new Vector3(-vertexOffset, 0, vertexOffset) + cellOffset + gridOffset;
+                vertices[v + 2] = new Vector3(vertexOffset, 0, -vertexOffset) + cellOffset + gridOffset;
+                vertices[v + 3] = new Vector3(vertexOffset, 0, vertexOffset) + cellOffset + gridOffset;
 
                 //Debug.Log("Vertices" + (v + 0) + vertices[v + 0]);
                 //Debug.Log("Vertices" + (v + 1) + vertices[v + 1]);
@@ -83,7 +84,46 @@ public class ProceduralGrid : MonoBehaviour {
 
         }
     }
-    
+
+    private void MakeContiguousProceduralGrid()
+    {
+        //set array size
+        vertices = new Vector3[(gridSize + 1) * (gridSize + 1)];
+        triangles = new int[gridSize * gridSize * 6];
+
+        //set tracker integers
+        int v = 0;
+        int t = 0;
+
+        //set vertex grid
+        for (int x = 0; x <= gridSize; x++)
+        {
+            for (int y = 0; y <= gridSize; y++)
+            {
+                vertices[v] = new Vector3((x * cellSize) - vertexOffset, 0, (y * cellSize) - vertexOffset);
+                v++;
+            }
+        }
+
+        //reset vertex tracker
+        v = 0;
+
+        //setting each cells triangles
+        for (int x = 0; x < gridSize; x++)
+        {
+            for (int y = 0; y < gridSize; y++)
+            {
+                triangles[t] = v;
+                triangles[t + 1] = triangles[t + 4] = v + 1;
+                triangles[t + 2] = triangles[t + 3] = v+ (gridSize + 1);
+                triangles[t + 5] = v + (gridSize + 1) + 1;
+                v++;
+                t += 6;
+            }
+            v++;
+        }
+    }
+
     void UpdateMesh() {
         mesh.Clear();
         mesh.vertices = vertices;

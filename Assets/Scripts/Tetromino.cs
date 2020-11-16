@@ -11,5 +11,5 @@ public class Tetromino : MonoBehaviour {
         this.transform.position = new Vector3(-grid.cellSize, grid.cellSize * 0.5f, -grid.cellSize); //Start Position
     }
 
-
+    
 }
