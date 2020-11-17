@@ -10,7 +10,6 @@ public class VoxelRender : MonoBehaviour
     List<int> triangles;
 
     public float scale = 1f;
-    public int yAxis = 1;
 
     float adjScale;
 
@@ -23,6 +22,8 @@ public class VoxelRender : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("Pos: " + this.transform.position);
+
         GenerateVoxelMesh(new VoxelData());
         UpdateMesh();
         GetComponent<MeshCollider>().sharedMesh = mesh;
@@ -37,41 +38,27 @@ public class VoxelRender : MonoBehaviour
         {
             for (int x = 0; x < data.Width; x++)
             {
-                if(data.GetCell (x,z) == 0)
+                for (int y = 0; y < data.Height; y++)
                 {
-                    continue; //Aus diesem Loop springen und zum äusseren gehen...
-                }
-
-                //With neighbor detection
-                //MakeCube(adjScale, new Vector3((float)x * scale, 0, (float)z * scale), x, z, data);
-                
-                //Wothout neighbor detection
-                MakeCube(adjScale, new Vector3((float)x * scale, yAxis, (float)z * scale));
+                    if (data.GetCell(x, y, z) == 0)
+                    {
+                        continue; 
+                    }
+                    MakeCube(adjScale, new Vector3((float)x * scale, (float)y * scale, (float)z * scale));
+                }           
             }
         }
     }
 
-    //With neighbor detection
-    //void MakeCube(float cubeScale, Vector3 cubePos, int x, int z, VoxelData data)
-    //{
-    //    for (int i = 0; i < 6; i++)  //Weil Cube 6 Seiten
-    //    {
-    //        if (data.GetNeighbor(x, z, (Direction)i) == 0)
-    //        {
-    //            MakeFace((Direction)i, cubeScale, cubePos); //i=für welches Face wir handeln. 
-    //        }
+  
 
-    //    }
-    //}
-
-    //Without neighbor detection
     void MakeCube(float cubeScale, Vector3 cubePos)
     {
         Debug.Log("CubPos: "+ cubePos );
 
-        for (int i = 0; i < 6; i++)  //Weil Cube 6 Seiten
+        for (int i = 0; i < 6; i++) 
         {           
-            MakeFace((Direction)i, cubeScale, cubePos); //i = für welches Face wir handeln.         
+            MakeFace((Direction)i, cubeScale, cubePos);        
         }
     }
 

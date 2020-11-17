@@ -9,7 +9,7 @@ public static class CubeMashData
         new Vector3(-1, -1,  1),
         new Vector3( 1, -1,  1),
         new Vector3(-1,  1, -1),
-        new Vector3( 1,  1, -1),  //East Side
+        new Vector3( 1,  1, -1),
         new Vector3( 1, -1, -1),
         new Vector3(-1, -1, -1)
     };
@@ -18,9 +18,9 @@ public static class CubeMashData
     {
         new int[] { 0, 1, 2, 3 },  // North Side
         new int[] { 5, 0, 3, 6 },  // East Side
-        new int[] { 4, 5, 6, 7 },  // South Side  (Bso. Direction Nr.2: get me Vector3 3,4,5,6,7
+        new int[] { 4, 5, 6, 7 },  // South Side
         new int[] { 1, 4, 7, 2 },  // West Sidde
-        new int[] { 5, 4, 1, 0 },  // 
+        new int[] { 5, 4, 1, 0 },
         new int[] { 3, 2, 7, 6 },
     };
 

@@ -4,7 +4,6 @@
 public class ProceduralGrid : MonoBehaviour {
     
     Mesh mesh;
-    //private int fallDownAxis = 0;
 
     Vector3[] vertices;
     int[] triangles;
@@ -32,7 +31,6 @@ public class ProceduralGrid : MonoBehaviour {
         Vector3 pos;
         pos = vertices[i * 4]; // i*4 for translation to cube verices number
         pos.x += vertexOffset;
-        //fallDownAxis = 0; // TODO: Set fallDownAxix as time based here.
         pos.y = cellSize; // = vOffset + (cellSize * fallDownAxis);
         pos.z += vertexOffset;
         return pos;
