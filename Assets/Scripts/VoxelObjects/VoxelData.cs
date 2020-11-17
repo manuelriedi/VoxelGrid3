@@ -1,8 +1,11 @@
 ﻿
 public class VoxelData
 {
-    //L-Tetromino
-    int[,] data = new int[,] { { 1, 1, 1 }, { 1, 0, 0 } };
+    //L-Tetromino                   Row 1        Row 2
+    int[,] data = new int[,] { { 1, 1, 1 }, { 1, 0, 0 } };  //Liegend zu Z- 
+    //int[,] data = new int[,] { { 1, 1, 1 }, { 0, 0, 1 } };  //Liegend zu Z+
+    //int[,] data = new int[,] { { 1, 0, 0 }, { 1, 0, 0 } };  //Liegend zu X+
+    //int[,,] data = new int[,,] {{ { 1, 0, 0 }, { 1, 0, 0 }, { 1, 1, 1} }};
 
     public int Width
     {
@@ -65,7 +68,7 @@ public class VoxelData
     //};
 }
 
-public enum Direction
+public enum Direction 
 {
     North,  //the 0 Index is alway north
     East,

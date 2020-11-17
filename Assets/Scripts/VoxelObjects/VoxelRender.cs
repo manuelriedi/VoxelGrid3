@@ -17,6 +17,7 @@ public class VoxelRender : MonoBehaviour
     void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
+
         adjScale = scale * 0.5f;
     }
 
@@ -24,6 +25,7 @@ public class VoxelRender : MonoBehaviour
     {
         GenerateVoxelMesh(new VoxelData());
         UpdateMesh();
+        GetComponent<MeshCollider>().sharedMesh = mesh;
     }
 
     void GenerateVoxelMesh(VoxelData data)
@@ -65,7 +67,7 @@ public class VoxelRender : MonoBehaviour
     //Without neighbor detection
     void MakeCube(float cubeScale, Vector3 cubePos)
     {
-        Debug.Log("CubPos: "+ cubePos);
+        Debug.Log("CubPos: "+ cubePos );
 
         for (int i = 0; i < 6; i++)  //Weil Cube 6 Seiten
         {           
@@ -86,9 +88,6 @@ public class VoxelRender : MonoBehaviour
         triangles.Add(vCount - 4);
         triangles.Add(vCount - 4 + 2);
         triangles.Add(vCount - 4 + 3);
-
-      
-
     }
 
     void UpdateMesh()
