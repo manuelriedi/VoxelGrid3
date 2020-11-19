@@ -76,7 +76,7 @@ public class Pickup : MonoBehaviour {
         //var position = heldItem.transform.position;
         //heldItem.transform.position = grid.TransToRasterPosition(position);
 
-        heldItem.transform.position = grid.TransToRasterPosition(heldItem);
+        heldItem.transform.position = grid.TransToRasterPosition(ref heldItem);
 
 
         heldItem = null;

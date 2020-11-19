@@ -23,10 +23,20 @@ public class ProceduralGrid : MonoBehaviour {
     }
 
     void Start() {
+        initFields();
         vertexOffset = cellSize * 0.5f;
         MakeProceduralGrid();
         //MakeContiguousProceduralGrid();
         UpdateMesh();
+    }
+
+    private void initFields()
+    {
+        for (int i = 0; i < (gridSize * gridSize); i++)
+        {
+            occupiedFields.Add(i, null);
+            //Debug.Log(occupiedFields[i]);
+        }
     }
 
     private Vector3 GetRasterPosition(int i) {
@@ -38,16 +48,16 @@ public class ProceduralGrid : MonoBehaviour {
         return pos;
     }
 
-    public Vector3 TransToRasterPosition(Carriable tetromino) {
+    public Vector3 TransToRasterPosition(ref Carriable tetromino) {
         int cellId = 0;
         //var p = tetromino.transform.position;
 
         Transform[] allChildren = tetromino.GetComponentsInChildren<Transform>();
         List<Vector3> tempPositions = new List<Vector3>();
         List<int> tempCellId = new List<int>();
+        Dictionary<int, GameObject> tempFieldIdToCube = new Dictionary<int, GameObject>();
         foreach (Transform child in allChildren)
         {
-            //childObjects.Add(child.gameObject);
             var p = child.gameObject.transform.position;
 
             for (int i = 0; i <= vertices.Length - 4; i += 4)
@@ -55,7 +65,7 @@ public class ProceduralGrid : MonoBehaviour {
                 if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z)
                 {
                     tempPositions.Add(GetRasterPosition(cellId));
-                    tempCellId.Add(cellId);
+                    tempFieldIdToCube[cellId] = child.gameObject;
                 }
                 cellId++;
             }
@@ -64,27 +74,24 @@ public class ProceduralGrid : MonoBehaviour {
 
         if(tempPositions.Count == allChildren.Length)
         {
-            Debug.Log("All cubes are inside Grid");
-
-            for (int i = 0; i < allChildren.Length; i++)
+         
+            foreach (var id in tempFieldIdToCube.Keys)
             {
-                //occupiedFields.Add(id);
-                occupiedFields.Add(tempCellId[i], allChildren[i].gameObject); //TODO: connect with real gameobjects
+                occupiedFields[id] = tempFieldIdToCube[id];
+                //Debug.Log(occupiedFields[id]);
             }
 
-
-            //Debug
-            foreach (var i in occupiedFields)
+            foreach (var item in occupiedFields)
             {
-                Debug.Log("Field " + i + " is occupied");
+                Debug.Log("Field: " + item.Key + " occupied with: " + item.Value);
             }
 
             return tempPositions[0];
         }
         else
         {
-            Debug.Log("At least one cube is outside the Grid");
-            return new Vector3((cellSize * gridSize + 1), cellSize, cellSize); //Case no cell detected
+            Debug.Log("At least one cube was outside the Grid");
+            return new Vector3((cellSize * gridSize + 1), cellSize, cellSize); //Case no cell detected => Standartposition
         }
 
         //List<GameObject> childObjects = new List<GameObject>();
