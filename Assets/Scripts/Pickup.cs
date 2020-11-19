@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Pickup : MonoBehaviour {
 
@@ -59,11 +60,23 @@ public class Pickup : MonoBehaviour {
     private void DropHeldItem() {
         heldItem.DropObject();
 
-        //Debug.Log(heldItem.transform.localScale);
-        
-        var position = heldItem.transform.position;
-        heldItem.transform.position = grid.TransToRasterPosition(position);
-        //tetromino.transform.rotation = Quaternion.LookRotation(Vector3.up);
+        //Transform[] allChildren = heldItem.GetComponentsInChildren<Transform>();
+        //List<GameObject> childObjects = new List<GameObject>();
+        //foreach (Transform child in allChildren)
+        //{
+        //    childObjects.Add(child.gameObject);
+        //}
+
+        //foreach (GameObject child in childObjects)
+        //{
+        //   grid.TransToRasterPosition(child.transform.position);
+        //}
+
+        //Old
+        //var position = heldItem.transform.position;
+        //heldItem.transform.position = grid.TransToRasterPosition(position);
+
+        heldItem.transform.position = grid.TransToRasterPosition(heldItem);
 
 
         heldItem = null;
