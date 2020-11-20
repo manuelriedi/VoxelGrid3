@@ -60,24 +60,7 @@ public class Pickup : MonoBehaviour {
     private void DropHeldItem() {
         heldItem.DropObject();
 
-        //Transform[] allChildren = heldItem.GetComponentsInChildren<Transform>();
-        //List<GameObject> childObjects = new List<GameObject>();
-        //foreach (Transform child in allChildren)
-        //{
-        //    childObjects.Add(child.gameObject);
-        //}
-
-        //foreach (GameObject child in childObjects)
-        //{
-        //   grid.TransToRasterPosition(child.transform.position);
-        //}
-
-        //Old
-        //var position = heldItem.transform.position;
-        //heldItem.transform.position = grid.TransToRasterPosition(position);
-
         heldItem.transform.position = grid.TransToRasterPosition(ref heldItem);
-
 
         heldItem = null;
         itemHeld = false;
