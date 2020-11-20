@@ -43,7 +43,7 @@ public class ProceduralGrid : MonoBehaviour
     public Vector3 TransToRasterPosition(ref Carriable tetromino)
     {
         //****
-        //TODO: Temp to collid the tetremino in y-axis with the next object which is currently the whole lowest floor.  
+        //TODO: Temp to collid the tetromino in y-axis with the next object which is currently the whole lowest floor.  
         float xPos = tetromino.gameObject.transform.position.x;
         float zPos = tetromino.gameObject.transform.position.z;
         Vector3 newPos = new Vector3(xPos, 0, zPos);
@@ -81,12 +81,10 @@ public class ProceduralGrid : MonoBehaviour
             Destroy(a.combinedMesh);
             Destroy(tetromino.GetComponent<Carriable>());
 
+            //Destroy full levels
             if (detectFullLevel())
             {
-                for (int i = 0; i < gridSize*gridSize; i++)
-                {
-                    Destroy(occupiedCells[i]);
-                }
+                occupiedCells.Where(x => x.Key < (gridSize * gridSize)).Select(p => p.Value).ToList().ForEach(k => Destroy(k)); //TODO: Distinguish between levels
             }
 
             //Print current cell occupations
@@ -95,9 +93,7 @@ public class ProceduralGrid : MonoBehaviour
             Debug.Log("Total occupied cells: " + count + " of " + occupiedCells.Count);
 
             return temp_Positions[0]; 
-        }
-        else
-        {
+        } else {
             Debug.Log("(Part of) tetromino was outside grid");
             return new Vector3((cellSize * gridSize + 1), cellSize, cellSize); //TODO: Define standart position for tetrominos
         }
@@ -105,14 +101,7 @@ public class ProceduralGrid : MonoBehaviour
 
     private bool detectFullLevel()
     {
-        for(int i = 0; i < gridSize*gridSize; i++)
-        {
-            if(occupiedCells[i] == null)
-            {
-                return false;
-            }
-        }
-        return true;
+        return occupiedCells.Where(x => x.Key < (gridSize*gridSize)).All(x => x.Value != null); //TODO: Distinguish between levels
     }
 
     private Vector3 GetRasterPosition(int i)
