@@ -9,7 +9,7 @@ public class MeshCombiner : MonoBehaviour {
 
     private MeshRenderer combinedRenderer;
     private MeshFilter combinedFilter;
-    private Mesh combinedMesh;
+    public Mesh combinedMesh;
 
     private void Start() {
         combinedRenderer = GetComponent<MeshRenderer>();
@@ -25,7 +25,7 @@ public class MeshCombiner : MonoBehaviour {
         combinedMesh.subMeshCount = filters.Sum(f => f.mesh.subMeshCount);
 
         foreach (var filter in filters) {
-            filter.GetComponent<Renderer>().enabled = false;
+            //filter.GetComponent<Renderer>().enabled = false;
 
             var previousVtx = vtxBuffer.Count;
             var childMesh = filter.mesh;
@@ -50,48 +50,6 @@ public class MeshCombiner : MonoBehaviour {
 
         combinedMesh.RecalculateNormals();
         combinedMesh.RecalculateBounds();
-
-
-
-        //Mesh mesh = this.GetComponentsInChildren<MeshFilter>()[0].sharedMesh;
-        //Mesh mesh = this.GetComponentsInChildren<MeshFilter>()[0].sharedMesh;
-        //Debug.Log("Mesh bounds: " + combinedRenderer.bounds.size);
-
-        //Debug.Log(combinedMesh.bounds.size);
-        //Debug.Log(combinedMesh.bounds);
-
-        //Debug.Log(combinedMesh.vertices.Length); 
-        //foreach (Vector3 v in combinedMesh.vertices)
-        //{
-        //    Debug.Log("Vertice: " + v);
-        //}
-
-        //MeshFilter[] meshFilters = this.GetComponentsInChildren<MeshFilter>();
-        //foreach (MeshFilter meshFilter in meshFilters)
-        //{
-
-        //    if (meshFilter.gameObject == this)
-        //    {
-        //        //if the currently iterated MF component is the root object's, continue since we want onyl those found on children
-        //        continue;
-        //    }
-
-
-        //    Debug.Log(meshFilter.gameObject.name);
-
-        //    foreach (Vector3 v in meshFilter.mesh.vertices)
-        //    {
-
-        //        Debug.Log(v);
-        //    }
-
-        //}
-
-
-
-
-
-
 
     }
 }
