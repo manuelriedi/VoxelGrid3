@@ -5,19 +5,18 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralGrid : MonoBehaviour
 {
-
     Mesh mesh;
-
     Vector3[] vertices;
     int[] triangles;
 
-    public float cellSize = 1;
+    public float cellSize;
     public int gridSize;
-    public int gridLevels = 2;
+    public int gridLevels;
     public Vector3 gridOffset; //TODO: Not working with y-axis
 
     private float vertexOffset;
     private Dictionary<int, GameObject> occupiedCells = new Dictionary<int, GameObject>();
+    private int cellsPerLevel;
 
     void Awake()
     {
@@ -26,13 +25,14 @@ public class ProceduralGrid : MonoBehaviour
 
     void Start()
     {
-        initCells();
+        InitCells();
         vertexOffset = cellSize * 0.5f;
+        cellsPerLevel = gridSize * gridSize;
         MakeProceduralGrid();
         UpdateMesh();
     }
 
-    private void initCells()
+    private void InitCells()
     {
         for (int i = 0; i < (gridSize * gridSize * gridLevels); i++)
         {
@@ -42,8 +42,9 @@ public class ProceduralGrid : MonoBehaviour
 
     public Vector3 TransToRasterPosition(ref Carriable tetromino)
     {
+
         //****
-        //TODO: Temp to collid the tetromino in y-axis with the next object which is currently the whole lowest floor.  
+        //TODO: Temp to collid the tetromino in y-axis with the next object which is currently only the whole lowest floor.  
         float xPos = tetromino.gameObject.transform.position.x;
         float zPos = tetromino.gameObject.transform.position.z;
         Vector3 newPos = new Vector3(xPos, 0, zPos);
@@ -70,7 +71,7 @@ public class ProceduralGrid : MonoBehaviour
             cellId = 0;
         }
 
-        if (temp_Positions.Count == allChildren.Length) 
+        if (temp_Positions.Count == allChildren.Length)
         {
             foreach (var id in temp_CellToCube.Keys)
             {
@@ -81,16 +82,9 @@ public class ProceduralGrid : MonoBehaviour
             Destroy(a.combinedMesh);
             Destroy(tetromino.GetComponent<Carriable>());
 
-            //Destroy full levels
-            if (detectFullLevel())
-            {
-                occupiedCells.Where(x => x.Key < (gridSize * gridSize)).Select(p => p.Value).ToList().ForEach(k => Destroy(k)); //TODO: Distinguish between levels
-            }
+            DestroyFullLevels();
 
-            //Print current cell occupations
-            int count = 0;
-            occupiedCells.Where(o => o.Value != null).ToList().ForEach(item => { count++; Debug.Log("Cell " + item.Key + " : " + item.Value.name); });
-            Debug.Log("Total occupied cells: " + count + " of " + occupiedCells.Count);
+            PrintCurrentCellOccupations();
 
             return temp_Positions[0]; 
         } else {
@@ -99,9 +93,28 @@ public class ProceduralGrid : MonoBehaviour
         }
     }
 
-    private bool detectFullLevel()
+    private void PrintCurrentCellOccupations()
     {
-        return occupiedCells.Where(x => x.Key < (gridSize*gridSize)).All(x => x.Value != null); //TODO: Distinguish between levels
+        int count = 0;
+        occupiedCells.Where(o => o.Value != null)
+            .ToList()
+            .ForEach(item => { count++; Debug.Log("Cell " + item.Key + " : " + item.Value.name); });
+        Debug.Log("Total occupied cells: " + count + " of " + occupiedCells.Count);
+    }
+
+    private void DestroyFullLevels()
+    {
+        List<int> fullLevels = new List<int>();
+        for (int i = 0; i < gridLevels; i++)
+        {
+            if (!occupiedCells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Any(x => x.Value == null))
+            {
+                occupiedCells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel))
+                    .Select(p => p.Value)
+                    .ToList()
+                    .ForEach(k => Destroy(k));
+            }
+        }       
     }
 
     private Vector3 GetRasterPosition(int i)
@@ -118,11 +131,9 @@ public class ProceduralGrid : MonoBehaviour
     {
         float floorHight = 0f;
 
-        //set array size
         vertices = new Vector3[gridSize * gridSize * 4 * gridLevels];
         triangles = new int[gridSize * gridSize * 6 * gridLevels];
 
-        //set tracker integers
         int v = 0;
         int t = 0;
 
@@ -139,11 +150,6 @@ public class ProceduralGrid : MonoBehaviour
                     vertices[v + 2] = new Vector3(vertexOffset, floorHight, -vertexOffset) + cellOffset + gridOffset;
                     vertices[v + 3] = new Vector3(vertexOffset, floorHight, vertexOffset) + cellOffset + gridOffset;
 
-                    //Debug.Log("Vertices" + (v + 0) + vertices[v + 0]);
-                    //Debug.Log("Vertices" + (v + 1) + vertices[v + 1]);
-                    //Debug.Log("Vertices" + (v + 2) + vertices[v + 2]);
-                    //Debug.Log("Vertices" + (v + 3) + vertices[v + 3]);
-
                     triangles[t] = v;
                     triangles[t + 1] = triangles[t + 4] = v + 1;
                     triangles[t + 2] = triangles[t + 3] = v + 2;
@@ -153,7 +159,6 @@ public class ProceduralGrid : MonoBehaviour
                     t += 6;
                 }
             }
-
             floorHight += cellSize;
         }
 
