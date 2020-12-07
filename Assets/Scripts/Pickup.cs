@@ -60,7 +60,7 @@ public class Pickup : MonoBehaviour {
     private void DropHeldItem() {
         heldItem.DropObject();
 
-        heldItem.transform.position = grid.TransToRasterPosition(ref heldItem);
+        grid.TransToRasterPosition(ref heldItem);
 
         heldItem = null;
         itemHeld = false;

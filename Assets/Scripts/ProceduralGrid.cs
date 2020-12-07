@@ -19,6 +19,9 @@ public class ProceduralGrid : MonoBehaviour
     private Dictionary<int, GameObject> cell = new Dictionary<int, GameObject>();
     private int cellsPerLevel;
 
+    List<Vector3> temp_Positions;
+    Dictionary<int, GameObject> temp_CellToCube;
+
     void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
@@ -43,21 +46,12 @@ public class ProceduralGrid : MonoBehaviour
         }
     }
 
-    public Vector3 TransToRasterPosition(ref Carriable tetromino)
-    {   
-       
-        //****
-        //TODO: Collid the tetromino in y-axis with next object. Is currently only the complete lowest floor... ---> maybe with InvokeRepeating("Downward", time, repeatRate); 
-        float xPos = tetromino.gameObject.transform.position.x;
-        float zPos = tetromino.gameObject.transform.position.z;
-        Vector3 newPos = new Vector3(xPos, 0, zPos);
-        tetromino.gameObject.transform.position = newPos;
-        //****
 
+    private bool CheckRasterPositions(Transform[] allChildren)
+    {
         int cellId = 0;
-        Transform[] allChildren = tetromino.GetComponentsInChildren<Transform>();
-        List<Vector3> temp_Positions = new List<Vector3>();
-        Dictionary<int, GameObject> temp_CellToCube = new Dictionary<int, GameObject>();
+        temp_Positions = new List<Vector3>();
+        temp_CellToCube = new Dictionary<int, GameObject>();
         foreach (Transform child in allChildren)
         {
             var p = child.gameObject.transform.position;
@@ -73,26 +67,41 @@ public class ProceduralGrid : MonoBehaviour
             cellId = 0;
         }
 
-        if (temp_Positions.Count == allChildren.Length)
+        return temp_Positions.Count == allChildren.Length;
+    }
+
+    public void TransToRasterPosition(ref Carriable tetromino)
+    {   
+       
+
+     
+        Transform[] allChildren = tetromino.GetComponentsInChildren<Transform>();
+        
+
+        if (CheckRasterPositions(allChildren))
         {
             foreach (var id in temp_CellToCube.Keys)
             {
                 cell[id] = temp_CellToCube[id];
             }
 
+            tetromino.transform.position = temp_Positions[0];
+
             var mc = tetromino.GetComponent<MeshCombiner>();
             Destroy(mc.combinedMesh);
-            tetromino.GetComponent<Carriable>().enabled = false;
+            var c = tetromino.GetComponent<Carriable>();
+            Destroy(c);
+            //tetromino.GetComponent<Carriable>().enabled = false;
 
             DestroyFullLevels();
 
             PrintCurrentCellOccupations();
 
-            return temp_Positions[0]; 
         } else {
+            tetromino.transform.position = new Vector3((cellSize * gridSize + 1), 0, cellSize* cellSize); //TODO: Define standart position for tetrominos
+
             Debug.Log("(Part of) tetromino was outside grid");
             PrintCurrentCellOccupations();
-            return new Vector3((cellSize * gridSize + 1), 0, cellSize* cellSize); //TODO: Define standart position for tetrominos
         }
     }
 
