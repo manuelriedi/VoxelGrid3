@@ -60,7 +60,7 @@ public class Pickup : MonoBehaviour {
     private void DropHeldItem() {
         heldItem.DropObject();
 
-        grid.HandleTetromino(ref heldItem);
+        grid.CheckPosition(ref heldItem);
 
         heldItem = null;
         itemHeld = false;
