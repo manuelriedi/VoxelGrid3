@@ -112,7 +112,7 @@ public class ProceduralGrid : MonoBehaviour
         yPos -= cellSize;
         Vector3 newPos = new Vector3(xPos, yPos, zPos);
 
-        //Check if the new position of tetromino would be collide with filed ground or with a other teromino
+        //Check if the new position of tetromino will collide with the filed ground or a other teromino
         if (yPos <= vertices[0].y || TetrominoCollided(newPos))
         {
             CancelInvoke();
@@ -136,12 +136,14 @@ public class ProceduralGrid : MonoBehaviour
     {       
         foreach (var cell in cells)
         {
-            Collider ce = cell.Value?.GetComponent<Collider>();
-            if (ce != null && ce.bounds.Contains(newPos))
+            if (cell.Value != null)
             {
-                Debug.Log("COLLIDED WITH OTHER TETROMINO");
-                return true;
-            }
+                //Check if the new position collides with a full cell
+                if (cell.Value.GetComponent<Collider>().bounds.Contains(newPos))
+                {
+                    return true;
+                }
+            }    
         }
         return false;
     }
@@ -169,11 +171,10 @@ public class ProceduralGrid : MonoBehaviour
             cellId = 0;
         }
     }
-
-    //TODO: Define standart position for tetrominos
+   
     private Vector3 TetrominoDefaultPosition()
     {
-        return new Vector3((cellSize * gridSize + 1), 0, cellSize * cellSize);
+        return new Vector3((cellSize * gridSize + 1), 0, cellSize * cellSize); //TODO: Define better standart position for tetrominos
     }
 
     private void PrintCurrentCellOccupations()
