@@ -16,7 +16,7 @@ public class ProceduralGrid : MonoBehaviour
     public Vector3 gridOffset; //TODO: Not working with y-axis
 
     private float vertexOffset;
-    private Dictionary<int, GameObject> cell = new Dictionary<int, GameObject>();
+    private Dictionary<int, GameObject> cells = new Dictionary<int, GameObject>();
     private int cellsPerLevel;
 
     //NewWay
@@ -44,7 +44,7 @@ public class ProceduralGrid : MonoBehaviour
     {
         for (int i = 0; i < (gridSize * gridSize * gridLevels); i++)
         {
-            cell.Add(i, null);
+            cells.Add(i, null);
         }
     }
 
@@ -66,8 +66,8 @@ public class ProceduralGrid : MonoBehaviour
                 {
                     var p = child.gameObject.transform.position;
 
-                    //Check for one grid level if all cubes are inside the grid
-                    for (int i = 0; i <= (vertices.Length - 4) / gridLevels; i += 4) 
+                    //Check if all cubes of tetromino are inside the grids x- and z- axis 
+                    for (int i = 0; i <= (vertices.Length - 4) / gridLevels; i += 4)
                     {
                         if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z)
                         {
@@ -79,11 +79,11 @@ public class ProceduralGrid : MonoBehaviour
                 }
             }
 
-            
-            //If all cubes inside 3D-Grid, snap its position
-            if (countCubes == childrenWithParent.Length-1)
+
+            //If all cubes (all children of tetromino without the parent) inside field, snap its positions
+            if (countCubes == childrenWithParent.Length - 1)
             {
-                SnapPosition();              
+                SnapPosition();
             }
             else
             {
@@ -100,7 +100,7 @@ public class ProceduralGrid : MonoBehaviour
 
     private void SnapPosition()
     {
-        tetromino.transform.position = snapPosition[1]; //TODO: u.u muss muss die position für alle children ink. parent seperat gesetzt werden
+        tetromino.transform.position = snapPosition[1]; //TODO: möglw. muss die position für alle children ink. parent seperat gesetzt werden
         InvokeRepeating("FallDownUntilCollision", 1.0f, 1.0f);
     }
 
@@ -110,12 +110,10 @@ public class ProceduralGrid : MonoBehaviour
         float yPos = tetromino.gameObject.transform.position.y;
         float zPos = tetromino.gameObject.transform.position.z;
         yPos -= cellSize;
-        if(yPos >= vertices[0].y) //TODO: Add here more conditions => collision with occepiuded cells
-        {
-            Vector3 newPos = new Vector3(xPos, yPos, zPos);
-            tetromino.gameObject.transform.position = newPos;
-        }
-        else
+        Vector3 newPos = new Vector3(xPos, yPos, zPos);
+
+        //Check if the new position of tetromino would be collide with filed ground or with a other teromino
+        if (yPos <= vertices[0].y || TetrominoCollided(newPos))
         {
             CancelInvoke();
             SaveCubePositions();
@@ -126,32 +124,49 @@ public class ProceduralGrid : MonoBehaviour
             Destroy(carriable);
 
             DestroyFullLevels();
+            PrintCurrentCellOccupations();
         }
+        else
+        {
+            tetromino.gameObject.transform.position = newPos;
+        }
+    }
+
+    private bool TetrominoCollided(Vector3 newPos)
+    {       
+        foreach (var cell in cells)
+        {
+            Collider ce = cell.Value?.GetComponent<Collider>();
+            if (ce != null && ce.bounds.Contains(newPos))
+            {
+                Debug.Log("COLLIDED WITH OTHER TETROMINO");
+                return true;
+            }
+        }
+        return false;
     }
 
     private void SaveCubePositions()
     {
-        Transform[] childrenAndParent = tetromino.GetComponentsInChildren<Transform>();
-        Dictionary<int, GameObject> temp_CellToCube = new Dictionary<int, GameObject>();
+        Transform parent = tetromino.GetComponent<Transform>();
+        Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
         int cellId = 0;
-        foreach (Transform child in childrenAndParent)
+        foreach (Transform child in childrenWithParent)
         {
-            var p = child.gameObject.transform.position;
-            for (int i = 0; i <= vertices.Length - 4; i += 4)
+            if (child != parent)
             {
-                //Check on which cell the cubes are
-                if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z && p.y >= (vertices[i].y - vertexOffset) && p.y <= (vertices[i].y + vertexOffset))
-                {                   
-                    temp_CellToCube[cellId] = child.gameObject;
+                var p = child.gameObject.transform.position;
+                for (int i = 0; i <= vertices.Length - 4; i += 4)
+                {
+                    //Check on which cell the tetrominos child are
+                    if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z && p.y >= vertices[i].y && p.y <= vertices[i].y + cellSize)
+                    {
+                        cells[cellId] = child.gameObject;
+                    }
+                    cellId++;
                 }
-                cellId++;
             }
             cellId = 0;
-        }
-
-        foreach (var id in temp_CellToCube.Keys)
-        {
-            cell[id] = temp_CellToCube[id];
         }
     }
 
@@ -164,10 +179,10 @@ public class ProceduralGrid : MonoBehaviour
     private void PrintCurrentCellOccupations()
     {
         int count = 0;
-        cell.Where(o => o.Value != null)
+        cells.Where(o => o.Value != null)
             .ToList()
-            .ForEach(item => { count++; /*Debug.Log("Cell " + item.Key + " : " + item.Value.name);*/ });
-        Debug.Log("Total occupied cells: " + count + " of " + cell.Count);
+            .ForEach(item => { count++; /*Debug.Log("Cell " + item.Key + " : " + item.Value.name); */ });
+        Debug.Log("Total occupied cells: " + count + " of " + cells.Count);
     }
 
     private void DestroyFullLevels()
@@ -176,21 +191,32 @@ public class ProceduralGrid : MonoBehaviour
 
         for (int i = 0; i < gridLevels; i++)
         {
-            if (!cell.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Any(x => x.Value == null))
+            //check if there are full levels
+            if (!cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Any(x => x.Value == null))
             {
                 //Destroy full Level
-                var under = cell.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Select(c => c.Value);
+                var under = cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Select(c => c.Value);
                 foreach (var item in under)
                 {
                     Destroy(item);
                 }
+
+                //Destroy full Level
+                //foreach (var cell in cells)
+                //{
+                //    if(cell.Key >= i * cellsPerLevel && cell.Key < (i + 1) * cellsPerLevel)
+                //    {
+                //        Destroy(cell.Value);
+                //    }
+                //}
+
                 moveUperLevels = true;
             }
 
             if (moveUperLevels)
             {
-                //Move Levels which are on top of destroyed level
-                var over = cell.Where(x => (x.Key >= (i + 1) * cellsPerLevel) && (x.Key < (i + 2) * cellsPerLevel)).Select(c => c.Value);
+                //Move Levels which on top of destroyed levels
+                var over = cells.Where(x => (x.Key >= (i + 1) * cellsPerLevel) && (x.Key < (i + 2) * cellsPerLevel)).Select(c => c.Value);
                 foreach (var item in over)
                 {
                     if (item != null)
