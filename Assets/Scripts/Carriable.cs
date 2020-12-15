@@ -52,4 +52,10 @@ public class Carriable : MonoBehaviour {
         this.holder = null;
         this.isHeld = false;
     }
+
+    public void Rotate(Vector3 axis, int angle) {
+        transform.rotation = cachedRotation;
+        transform.Rotate(axis, angle, Space.World);
+        cachedRotation = transform.rotation;
+    }
 }

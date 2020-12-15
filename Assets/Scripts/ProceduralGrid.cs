@@ -19,6 +19,9 @@ public class ProceduralGrid : MonoBehaviour
     private Dictionary<int, GameObject> cell = new Dictionary<int, GameObject>();
     private int cellsPerLevel;
 
+    List<Vector3> temp_Positions;
+    Dictionary<int, GameObject> temp_CellToCube;
+
     void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
@@ -26,7 +29,6 @@ public class ProceduralGrid : MonoBehaviour
 
     void Start()
     {
-        InvokeRepeating("Downward", 0f, 1f);
 
         InitCells();
         vertexOffset = cellSize * 0.5f;
@@ -43,21 +45,15 @@ public class ProceduralGrid : MonoBehaviour
         }
     }
 
-    public Vector3 TransToRasterPosition(ref Carriable tetromino)
-    {   
-       
-        //****
-        //TODO: Collid the tetromino in y-axis with next object. Is currently only the complete lowest floor... ---> maybe with InvokeRepeating("Downward", time, repeatRate); 
-        float xPos = tetromino.gameObject.transform.position.x;
-        float zPos = tetromino.gameObject.transform.position.z;
-        Vector3 newPos = new Vector3(xPos, 0, zPos);
-        tetromino.gameObject.transform.position = newPos;
-        //****
 
+
+   
+
+    private bool CheckRasterPositions(Transform[] allChildren)
+    {
         int cellId = 0;
-        Transform[] allChildren = tetromino.GetComponentsInChildren<Transform>();
-        List<Vector3> temp_Positions = new List<Vector3>();
-        Dictionary<int, GameObject> temp_CellToCube = new Dictionary<int, GameObject>();
+        temp_Positions = new List<Vector3>();
+        temp_CellToCube = new Dictionary<int, GameObject>();
         foreach (Transform child in allChildren)
         {
             var p = child.gameObject.transform.position;
@@ -66,34 +62,73 @@ public class ProceduralGrid : MonoBehaviour
                 if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z && p.y >= (vertices[i].y - vertexOffset) && p.y <= (vertices[i].y + vertexOffset))
                 {
                     temp_Positions.Add(GetRasterPosition(cellId));
-                    temp_CellToCube[cellId] = child.gameObject;
+                    temp_CellToCube[cellId] = child.gameObject; //TODO: must be done later
                 }
                 cellId++;
             }
             cellId = 0;
         }
 
-        if (temp_Positions.Count == allChildren.Length)
+        return temp_Positions.Count == allChildren.Length;
+    }
+
+    public void TransToRasterPosition(ref Carriable tetromino)
+    {   
+             
+        Transform[] allChildren = tetromino.GetComponentsInChildren<Transform>();
+
+        if (CheckRasterPositions(allChildren))
         {
+            tetromino.transform.position = temp_Positions[0]; //Set rasterposition with the y-hight the tetromino was droped
+
+
+
+            //1. Move tetromino downwards until colide with something
+            //InvokeRepeating("LetTetrominoFalling", 1.0f, 1.0f); ...
+            //...
+            float xPos = tetromino.gameObject.transform.position.x;
+            float zPos = tetromino.gameObject.transform.position.z;
+            Vector3 newPos = new Vector3(xPos, 1.5f, zPos);
+            tetromino.gameObject.transform.position = newPos; //last position bevore it collide with something
+
+            CheckRasterPositions(allChildren);
+
+
+            //2. Save cube objects definitive in the new grid-cell position
             foreach (var id in temp_CellToCube.Keys)
             {
                 cell[id] = temp_CellToCube[id];
             }
 
+
+            // 3. delete Meshcombiner + Carriable scripts
             var mc = tetromino.GetComponent<MeshCombiner>();
             Destroy(mc.combinedMesh);
-            tetromino.GetComponent<Carriable>().enabled = false;
+            var c = tetromino.GetComponent<Carriable>();
+            Destroy(c);
 
+
+            // 4. Destroy full levels and move upper levels downwards
             DestroyFullLevels();
 
+
+
+
+
+
             PrintCurrentCellOccupations();
 
-            return temp_Positions[0]; 
         } else {
+            tetromino.transform.position = new Vector3((cellSize * gridSize + 1), 0, cellSize* cellSize); //TODO: Define standart position for tetrominos
+
             Debug.Log("(Part of) tetromino was outside grid");
             PrintCurrentCellOccupations();
-            return new Vector3((cellSize * gridSize + 1), 0, cellSize* cellSize); //TODO: Define standart position for tetrominos
         }
+    }
+
+    private void LetTetrominoFalling()
+    {
+        
     }
 
     private void PrintCurrentCellOccupations()
@@ -143,7 +178,7 @@ public class ProceduralGrid : MonoBehaviour
         Vector3 pos;
         pos = vertices[i * 4];
         pos.x += vertexOffset;
-        pos.y += vertexOffset; // TODO: adjust y-axis
+        //pos.y += vertexOffset; // TODO: adjust y-axis
         pos.z += vertexOffset;
         return pos;
     }

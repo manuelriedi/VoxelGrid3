@@ -1,5 +1,15 @@
 ﻿using System.Collections.Generic;
+
 using UnityEngine;
+
+enum HoldRotation {
+    Left,
+    Right,
+    Up,
+    Down,
+    Clockwise,
+    CounterClockwise
+}
 
 public class Pickup : MonoBehaviour {
 
@@ -25,6 +35,24 @@ public class Pickup : MonoBehaviour {
 
             if (Input.GetMouseButtonUp(0) && Cursor.lockState == CursorLockMode.Locked) {
                 DropHeldItem();
+            }
+            else if (Input.GetKeyUp(KeyCode.J)) {
+                RotateHeldItem(HoldRotation.Left);
+            }
+            else if (Input.GetKeyUp(KeyCode.K)) {
+                RotateHeldItem(HoldRotation.Down);
+            }
+            else if (Input.GetKeyUp(KeyCode.L)) {
+                RotateHeldItem(HoldRotation.Right);
+            }
+            else if (Input.GetKeyUp(KeyCode.I)) {
+                RotateHeldItem(HoldRotation.Up);
+            }
+            else if (Input.GetKeyUp(KeyCode.U)) {
+                RotateHeldItem(HoldRotation.Clockwise);
+            }
+            else if (Input.GetKeyUp(KeyCode.O)) {
+                RotateHeldItem(HoldRotation.CounterClockwise);
             }
         }
         else {
@@ -60,7 +88,7 @@ public class Pickup : MonoBehaviour {
     private void DropHeldItem() {
         heldItem.DropObject();
 
-        heldItem.transform.position = grid.TransToRasterPosition(ref heldItem);
+        grid.TransToRasterPosition(ref heldItem);
 
         heldItem = null;
         itemHeld = false;
@@ -81,5 +109,51 @@ public class Pickup : MonoBehaviour {
     private static bool FindInHierarchy<T>(Component c, out T component) {
         component = c.GetComponentInParent<T>();
         return component != null;
+    }
+
+    private void RotateHeldItem(HoldRotation rotation) {
+        var worldAxisRight = NearestWorldAxis(transform.right);
+        var worldAxisForward = NearestWorldAxis(transform.forward);
+        var worldAxisUp = NearestWorldAxis(transform.up);
+        
+        switch (rotation) {
+            case HoldRotation.Up:
+                heldItem.Rotate(worldAxisRight, 90);
+                break;
+            case HoldRotation.Down:
+                heldItem.Rotate(worldAxisRight, -90);
+                break;
+            case HoldRotation.Right:
+                heldItem.Rotate(worldAxisUp, -90);
+                break;
+            case HoldRotation.Left:
+                heldItem.Rotate(worldAxisUp, 90);
+                break;
+            case HoldRotation.Clockwise:
+                heldItem.Rotate(worldAxisForward, -90);
+                break;
+            case HoldRotation.CounterClockwise:
+                heldItem.Rotate(worldAxisForward, 90);
+                break;
+        }
+    }
+
+    private static Vector3 NearestWorldAxis(Vector3 v) {
+        if (Mathf.Abs(v.x) < Mathf.Abs(v.y)) {
+            v.x = 0;
+            if (Mathf.Abs(v.y) < Mathf.Abs(v.z))
+                v.y = 0;
+            else
+                v.z = 0;
+        }
+        else {
+            v.y = 0;
+            if (Mathf.Abs(v.x) < Mathf.Abs(v.z))
+                v.x = 0;
+            else
+                v.z = 0;
+        }
+
+        return v;
     }
 }
