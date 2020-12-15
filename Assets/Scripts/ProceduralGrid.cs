@@ -133,7 +133,7 @@ public class ProceduralGrid : MonoBehaviour
     }
 
     private bool TetrominoCollided(Vector3 newPos)
-    {       
+    {
         foreach (var cell in cells)
         {
             if (cell.Value != null)
@@ -143,7 +143,7 @@ public class ProceduralGrid : MonoBehaviour
                 {
                     return true;
                 }
-            }    
+            }
         }
         return false;
     }
@@ -171,7 +171,7 @@ public class ProceduralGrid : MonoBehaviour
             cellId = 0;
         }
     }
-   
+
     private Vector3 TetrominoDefaultPosition()
     {
         return new Vector3((cellSize * gridSize + 1), 0, cellSize * cellSize); //TODO: Define better standart position for tetrominos
