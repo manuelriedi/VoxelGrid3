@@ -22,6 +22,7 @@ public class ProceduralGrid : MonoBehaviour
     //NewWay
     private List<Vector3> snapPosition = new List<Vector3>();
     private List<GameObject> childCubes = new List<GameObject>();
+    List<Transform> onlyChildren;
 
     Carriable tetromino;
 
@@ -51,7 +52,6 @@ public class ProceduralGrid : MonoBehaviour
     public void CheckPosition(ref Carriable tetro)
     {
         tetromino = tetro;
-
         childCubes.Clear();
         snapPosition.Clear();
         if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above the 3D-grid...
@@ -100,45 +100,81 @@ public class ProceduralGrid : MonoBehaviour
 
     private void SnapPosition()
     {
-        tetromino.transform.position = snapPosition[1]; //TODO: möglw. muss die position für alle children ink. parent seperat gesetzt werden
+        tetromino.transform.position = snapPosition[1]; 
+
+        CreateChildrenList();
+
+        //int i = 0;
+        //foreach (var child in onlyChildren)
+        //{
+        //    child.transform.position = snapPosition[i];
+        //    i++;
+        //}
+
+
         InvokeRepeating("FallDownUntilCollision", 1.0f, 1.0f);
     }
 
     private void FallDownUntilCollision()
     {
-        float xPos = tetromino.gameObject.transform.position.x;
-        float yPos = tetromino.gameObject.transform.position.y;
-        float zPos = tetromino.gameObject.transform.position.z;
-        yPos -= cellSize;
-        Vector3 newPos = new Vector3(xPos, yPos, zPos);
-
-        //Check if the new position of tetromino will collide with the filed ground or a other teromino
-        if (yPos <= vertices[0].y || TetrominoCollided(newPos))
+        foreach (var child in onlyChildren)
         {
-            CancelInvoke();
-            SaveCubePositions();
+            float xPos = child.gameObject.transform.position.x;
+            float yPos = child.gameObject.transform.position.y;
+            float zPos = child.gameObject.transform.position.z;
+            yPos -= cellSize;
+            Vector3 newPos = new Vector3(xPos, yPos, zPos);
 
-            var meshCombiner = tetromino.GetComponent<MeshCombiner>();
-            Destroy(meshCombiner.combinedMesh);
-            var carriable = tetromino.GetComponent<Carriable>();
-            Destroy(carriable);
+            //Check if the new position of child will collide with filed ground or other children
+            if (yPos <= vertices[0].y || ChildCollided(newPos))
+            {
+                CancelInvoke();
+                SaveCubePositions();
 
-            DestroyFullLevels();
-            PrintCurrentCellOccupations();
-        }
-        else
-        {
-            tetromino.gameObject.transform.position = newPos;
+                DestroyFullLevels();
+                PrintCurrentCellOccupations();
+                break;
+            }
+            else
+            {
+                child.gameObject.transform.position = newPos;
+            }
         }
     }
 
-    private bool TetrominoCollided(Vector3 newPos)
+
+    public void CreateChildrenList()
+    {
+        Transform parent = tetromino.GetComponent<Transform>();
+        Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
+        onlyChildren = new List<Transform>();
+
+        foreach (Transform child in childrenWithParent)
+        {
+            if (child != parent)
+            {
+                onlyChildren.Add(child);
+                child.parent = null;
+            }
+        }
+
+        tetromino.gameObject.SetActive(false); //TODO: destroy it, instead of active false
+
+        //var meshCombiner = tetromino.GetComponent<MeshCombiner>();
+        //Destroy(meshCombiner.combinedMesh);
+        //var carriable = tetromino.GetComponent<Carriable>();
+        //Destroy(carriable);
+        //Destroy(tetromino);
+
+    }
+
+    private bool ChildCollided(Vector3 newPos)
     {
         foreach (var cell in cells)
         {
             if (cell.Value != null)
             {
-                //Check if the new position collides with a full cell
+                //Check if new position collides with a full cell
                 if (cell.Value.GetComponent<Collider>().bounds.Contains(newPos))
                 {
                     return true;
@@ -150,13 +186,13 @@ public class ProceduralGrid : MonoBehaviour
 
     private void SaveCubePositions()
     {
-        Transform parent = tetromino.GetComponent<Transform>();
-        Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
+        //Transform parent = tetromino.GetComponent<Transform>();
+        //Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
         int cellId = 0;
-        foreach (Transform child in childrenWithParent)
+        foreach (Transform child in onlyChildren)
         {
-            if (child != parent)
-            {
+            //if (child != parent)
+            //{
                 var p = child.gameObject.transform.position;
                 for (int i = 0; i <= vertices.Length - 4; i += 4)
                 {
@@ -167,7 +203,7 @@ public class ProceduralGrid : MonoBehaviour
                     }
                     cellId++;
                 }
-            }
+            //}
             cellId = 0;
         }
     }
