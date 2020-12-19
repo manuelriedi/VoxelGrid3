@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -19,12 +18,15 @@ public class ProceduralGrid : MonoBehaviour
     private Dictionary<int, GameObject> cells = new Dictionary<int, GameObject>();
     private int cellsPerLevel;
 
-    //NewWay
-    private List<Vector3> snapPosition = new List<Vector3>();
+    private Vector3 snapPosition;
     private List<GameObject> childCubes = new List<GameObject>();
     List<Transform> onlyChildren;
 
     Carriable tetromino;
+
+    List<Transform> tempChilds = new List<Transform>();
+
+    Transform lowestChild;
 
     void Awake()
     {
@@ -33,7 +35,7 @@ public class ProceduralGrid : MonoBehaviour
 
     void Start()
     {
-
+        onlyChildren = new List<Transform>();
         InitCells();
         vertexOffset = cellSize * 0.5f;
         cellsPerLevel = gridSize * gridSize;
@@ -51,11 +53,16 @@ public class ProceduralGrid : MonoBehaviour
 
     public void CheckPosition(ref Carriable tetro)
     {
+        onlyChildren.Clear();
+        tempChilds.Clear();
+
         tetromino = tetro;
         childCubes.Clear();
-        snapPosition.Clear();
+        snapPosition = new Vector3();
+        float lowestCubeY = float.MaxValue;
         if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above the 3D-grid...
         {
+            lowestChild = null;
             Transform parent = tetromino.GetComponent<Transform>();
             Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
             int cellId = 0;
@@ -71,16 +78,20 @@ public class ProceduralGrid : MonoBehaviour
                     {
                         if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z)
                         {
-                            snapPosition.Add(GetRasterPosition(cellId));
+                            if (p.y < lowestCubeY)
+                            {
+                                lowestCubeY = p.y;
+                                lowestChild = child;
+                                snapPosition = GetRasterPosition(cellId);
+                            }
+                            tempChilds.Add(child);
                             countCubes++;
                         }
                         cellId++;
                     }
                 }
             }
-
-
-            //If all cubes (all children of tetromino without the parent) inside field, snap its positions
+            //If all children of tetromino, without the parent, inside field, snap its positions
             if (countCubes == childrenWithParent.Length - 1)
             {
                 SnapPosition();
@@ -88,35 +99,40 @@ public class ProceduralGrid : MonoBehaviour
             else
             {
                 Debug.Log("Position too far out of field");
-                //tetromino.transform.position = TetrominoDefaultPosition(); //TODO: De-comment out this line
+                //tetromino.transform.position = TetrominoDefaultPosition(); //comment-out for debug
             }
         }
         else
         {
             Debug.Log("Position to low");
-            //tetromino.transform.position = TetrominoDefaultPosition(); //TODO: De-comment out this line
+            //tetromino.transform.position = TetrominoDefaultPosition(); //comment-out for debug
         }
     }
 
     private void SnapPosition()
     {
-        tetromino.transform.position = snapPosition[1]; 
+        onlyChildren.Add(lowestChild); //Add the lowest child first because of the ground detection later
+        foreach (var child in tempChilds)
+        {
+            if (!child.Equals(lowestChild))
+            {
+                child.gameObject.transform.SetParent(lowestChild.transform, true);
+                onlyChildren.Add(child);
+            }                   
+        }
 
-        CreateChildrenList();
-
-        //int i = 0;
-        //foreach (var child in onlyChildren)
-        //{
-        //    child.transform.position = snapPosition[i];
-        //    i++;
-        //}
-
+        lowestChild.transform.parent = null;
+        lowestChild.transform.position = snapPosition;
+        tetromino.gameObject.SetActive(false);
+        lowestChild.transform.DetachChildren();
 
         InvokeRepeating("FallDownUntilCollision", 1.0f, 1.0f);
     }
 
     private void FallDownUntilCollision()
     {
+        bool noCollision = true;
+        Dictionary<Transform, Vector3> safePos = new Dictionary<Transform, Vector3>();
         foreach (var child in onlyChildren)
         {
             float xPos = child.gameObject.transform.position.x;
@@ -126,8 +142,9 @@ public class ProceduralGrid : MonoBehaviour
             Vector3 newPos = new Vector3(xPos, yPos, zPos);
 
             //Check if the new position of child will collide with filed ground or other children
-            if (yPos <= vertices[0].y || ChildCollided(newPos))
+            if (yPos < vertices[0].y || ChildCollided(newPos))
             {
+                noCollision = false;
                 CancelInvoke();
                 SaveCubePositions();
 
@@ -137,35 +154,17 @@ public class ProceduralGrid : MonoBehaviour
             }
             else
             {
-                child.gameObject.transform.position = newPos;
+                safePos.Add(child,newPos);
             }
         }
-    }
 
-
-    public void CreateChildrenList()
-    {
-        Transform parent = tetromino.GetComponent<Transform>();
-        Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
-        onlyChildren = new List<Transform>();
-
-        foreach (Transform child in childrenWithParent)
+        if(noCollision)
         {
-            if (child != parent)
+            foreach (var sp in safePos)
             {
-                onlyChildren.Add(child);
-                child.parent = null;
+                sp.Key.transform.position = sp.Value;
             }
         }
-
-        tetromino.gameObject.SetActive(false); //TODO: destroy it, instead of active false
-
-        //var meshCombiner = tetromino.GetComponent<MeshCombiner>();
-        //Destroy(meshCombiner.combinedMesh);
-        //var carriable = tetromino.GetComponent<Carriable>();
-        //Destroy(carriable);
-        //Destroy(tetromino);
-
     }
 
     private bool ChildCollided(Vector3 newPos)
@@ -186,31 +185,26 @@ public class ProceduralGrid : MonoBehaviour
 
     private void SaveCubePositions()
     {
-        //Transform parent = tetromino.GetComponent<Transform>();
-        //Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
         int cellId = 0;
         foreach (Transform child in onlyChildren)
         {
-            //if (child != parent)
-            //{
-                var p = child.gameObject.transform.position;
-                for (int i = 0; i <= vertices.Length - 4; i += 4)
+            var p = child.gameObject.transform.position;
+            for (int i = 0; i <= vertices.Length - 4; i += 4)
+            {
+                //Check on which cell the tetrominos child are
+                if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z && p.y >= vertices[i].y && p.y <= vertices[i].y + cellSize)
                 {
-                    //Check on which cell the tetrominos child are
-                    if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z && p.y >= vertices[i].y && p.y <= vertices[i].y + cellSize)
-                    {
-                        cells[cellId] = child.gameObject;
-                    }
-                    cellId++;
+                    cells[cellId] = child.gameObject;
                 }
-            //}
+                cellId++;
+            }
             cellId = 0;
         }
     }
 
     private Vector3 TetrominoDefaultPosition()
     {
-        return new Vector3((cellSize * gridSize + 1), 0, cellSize * cellSize); //TODO: Define better standart position for tetrominos
+        return new Vector3((cellSize * gridSize + 1), 0, cellSize * cellSize); //TODO: Define standart position for tetrominos
     }
 
     private void PrintCurrentCellOccupations()
@@ -225,10 +219,10 @@ public class ProceduralGrid : MonoBehaviour
     private void DestroyFullLevels()
     {
         bool moveUperLevels = false;
+        //List<int> fullLevels = new List<int>();
 
         for (int i = 0; i < gridLevels; i++)
         {
-            //check if there are full levels
             if (!cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Any(x => x.Value == null))
             {
                 //Destroy full Level
@@ -237,22 +231,12 @@ public class ProceduralGrid : MonoBehaviour
                 {
                     Destroy(item);
                 }
-
-                //Destroy full Level
-                //foreach (var cell in cells)
-                //{
-                //    if(cell.Key >= i * cellsPerLevel && cell.Key < (i + 1) * cellsPerLevel)
-                //    {
-                //        Destroy(cell.Value);
-                //    }
-                //}
-
                 moveUperLevels = true;
             }
 
             if (moveUperLevels)
             {
-                //Move Levels which on top of destroyed levels
+                //Move Levels top of destroyed level
                 var over = cells.Where(x => (x.Key >= (i + 1) * cellsPerLevel) && (x.Key < (i + 2) * cellsPerLevel)).Select(c => c.Value);
                 foreach (var item in over)
                 {
@@ -263,8 +247,9 @@ public class ProceduralGrid : MonoBehaviour
                 }
             }
         }
-
     }
+
+
 
     private Vector3 GetRasterPosition(int i)
     {
