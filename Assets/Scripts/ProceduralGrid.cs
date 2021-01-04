@@ -270,7 +270,7 @@ public class ProceduralGrid : MonoBehaviour
         Vector3 pos;
         pos = vertices[i * 4];
         pos.x += vertexOffset;
-        pos.y = (cellSize * gridLevels) - vertexOffset;
+        pos.y = (cellSize * gridLevels) - vertexOffset + gridOffset.y;
         pos.z += vertexOffset;
         return pos;
     }
