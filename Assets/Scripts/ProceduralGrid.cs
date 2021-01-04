@@ -212,39 +212,42 @@ public class ProceduralGrid : MonoBehaviour
         int count = 0;
         cells.Where(o => o.Value != null)
             .ToList()
-            .ForEach(item => { count++; /*Debug.Log("Cell " + item.Key + " : " + item.Value.name); */ });
+            .ForEach(item => { count++; Debug.Log("Cell " + item.Key + " : " + item.Value.name); });
         Debug.Log("Total occupied cells: " + count + " of " + cells.Count);
     }
 
     private void DestroyFullLevels()
     {
         bool moveUperLevels = false;
-        //List<int> fullLevels = new List<int>();
-
         for (int i = 0; i < gridLevels; i++)
         {
-            if (!cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Any(x => x.Value == null))
+            if (!cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Any(x => x.Value == null)) 
             {
-                //Destroy full Level
-                var under = cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Select(c => c.Value);
+                //Destroy full Level (with LINQ)
+                var under = cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel)).Select(c => c).ToList();
                 foreach (var item in under)
                 {
-                    Destroy(item);
+                    Destroy(item.Value);
+                    cells[item.Key] = null;
                 }
                 moveUperLevels = true;
             }
 
             if (moveUperLevels)
             {
-                //Move Levels top of destroyed level
-                var over = cells.Where(x => (x.Key >= (i + 1) * cellsPerLevel) && (x.Key < (i + 2) * cellsPerLevel)).Select(c => c.Value);
+                //Move Levels which on top of destroyed level
+                var over = cells.Where(x => (x.Key >= (i + 1) * cellsPerLevel) && (x.Key < (gridLevels * cellsPerLevel))).Select(c => c).ToList();
                 foreach (var item in over)
                 {
-                    if (item != null)
+                    if (item.Value != null)
                     {
-                        item.transform.position += new Vector3(0, -cellSize, 0);
+                        item.Value.transform.position += new Vector3(0, -cellSize, 0);
+                        cells[item.Key - cellsPerLevel] = item.Value;
+                        cells[item.Key] = null;
                     }
                 }
+                moveUperLevels = false;
+                DestroyFullLevels();
             }
         }
     }
