@@ -28,6 +28,8 @@ public class ProceduralGrid : MonoBehaviour
 
     Transform lowestChild;
 
+    private int levelsDestroyed = 0;
+
     void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
@@ -60,7 +62,7 @@ public class ProceduralGrid : MonoBehaviour
         childCubes.Clear();
         snapPosition = new Vector3();
         float lowestCubeY = float.MaxValue;
-        if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above the 3D-grid...
+        if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above 3D-grid...
         {
             lowestChild = null;
             Transform parent = tetromino.GetComponent<Transform>();
@@ -189,6 +191,13 @@ public class ProceduralGrid : MonoBehaviour
         foreach (Transform child in onlyChildren)
         {
             var p = child.gameObject.transform.position;
+
+            if(p.y > vertices[vertices.Length-4].y)
+            {
+                Debug.Log("Game Over");
+                break;
+            }
+
             for (int i = 0; i <= vertices.Length - 4; i += 4)
             {
                 //Check on which cell the tetrominos child are
@@ -212,8 +221,9 @@ public class ProceduralGrid : MonoBehaviour
         int count = 0;
         cells.Where(o => o.Value != null)
             .ToList()
-            .ForEach(item => { count++; Debug.Log("Cell " + item.Key + " : " + item.Value.name); });
+            .ForEach(item => { count++; /*Debug.Log("Cell " + item.Key + " : " + item.Value.name); */ });
         Debug.Log("Total occupied cells: " + count + " of " + cells.Count);
+        Debug.Log("Levels Destroyed: " + levelsDestroyed);
     }
 
     private void DestroyFullLevels()
@@ -231,6 +241,7 @@ public class ProceduralGrid : MonoBehaviour
                     cells[item.Key] = null;
                 }
                 moveUperLevels = true;
+                levelsDestroyed++;
             }
 
             if (moveUperLevels)
