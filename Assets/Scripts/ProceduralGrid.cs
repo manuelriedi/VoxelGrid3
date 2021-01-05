@@ -12,7 +12,7 @@ public class ProceduralGrid : MonoBehaviour
     public float cellSize;
     public int gridSize;
     public int gridLevels;
-    public Vector3 gridOffset; //TODO: Not working with y-axis
+    public Vector3 gridOffset;
 
     private float vertexOffset;
     private Dictionary<int, GameObject> cells = new Dictionary<int, GameObject>();
@@ -62,7 +62,7 @@ public class ProceduralGrid : MonoBehaviour
         childCubes.Clear();
         snapPosition = new Vector3();
         float lowestCubeY = float.MaxValue;
-        if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above 3D-grid...
+        if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above the play field
         {
             lowestChild = null;
             Transform parent = tetromino.GetComponent<Transform>();
@@ -75,7 +75,7 @@ public class ProceduralGrid : MonoBehaviour
                 {
                     var p = child.gameObject.transform.position;
 
-                    //Check if all cubes of tetromino are inside the grids x- and z- axis 
+                    //Check if all cubes of tetromino inside x- and z- axis of play fileds
                     for (int i = 0; i <= (vertices.Length - 4) / gridLevels; i += 4)
                     {
                         if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z && p.z <= vertices[i + 3].z)
@@ -93,7 +93,7 @@ public class ProceduralGrid : MonoBehaviour
                     }
                 }
             }
-            //If all children of tetromino, without the parent, inside field, snap its positions
+            //If all cubes of tetromino are inside the play field, snap its positions
             if (countCubes == childrenWithParent.Length - 1)
             {
                 SnapPosition();
@@ -101,19 +101,19 @@ public class ProceduralGrid : MonoBehaviour
             else
             {
                 Debug.Log("Position too far out of field");
-                //tetromino.transform.position = TetrominoDefaultPosition(); //comment-out for debug
+                tetromino.transform.position = TetrominoDefaultPosition();
             }
         }
         else
         {
             Debug.Log("Position to low");
-            //tetromino.transform.position = TetrominoDefaultPosition(); //comment-out for debug
+            tetromino.transform.position = TetrominoDefaultPosition();
         }
     }
 
     private void SnapPosition()
     {
-        onlyChildren.Add(lowestChild); //Add the lowest child first because of the ground detection later
+        onlyChildren.Add(lowestChild); //Add lowest child first because of ground detection
         foreach (var child in tempChilds)
         {
             if (!child.Equals(lowestChild))
@@ -143,7 +143,7 @@ public class ProceduralGrid : MonoBehaviour
             yPos -= cellSize;
             Vector3 newPos = new Vector3(xPos, yPos, zPos);
 
-            //Check if the new position of child will collide with filed ground or other children
+            //Check if new position of child will collide with play filed ground or other cubes
             if (yPos < vertices[0].y || ChildCollided(newPos))
             {
                 noCollision = false;
@@ -213,7 +213,7 @@ public class ProceduralGrid : MonoBehaviour
 
     private Vector3 TetrominoDefaultPosition()
     {
-        return new Vector3((cellSize * gridSize + 1), 0, cellSize * cellSize); //TODO: Define standart position for tetrominos
+        return new Vector3((gridSize * cellSize) + 2*cellSize, gridOffset.y, 0); //TODO: Define standart position for tetrominos
     }
 
     private void PrintCurrentCellOccupations()
