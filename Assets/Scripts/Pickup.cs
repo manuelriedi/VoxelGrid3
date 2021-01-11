@@ -29,8 +29,13 @@ public class Pickup : MonoBehaviour {
     void Start() { }
 
     // Update is called once per frame
-    private void Update() {
-        if (itemHeld) {
+    private void Update()
+    {
+        
+        if (itemHeld)
+        {
+            grid.CheckCurrentPosition(heldItem);
+
             HandleMouseZoom();
 
             if (Input.GetMouseButtonUp(0) && Cursor.lockState == CursorLockMode.Locked) {
