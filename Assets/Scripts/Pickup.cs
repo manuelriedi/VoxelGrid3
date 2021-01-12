@@ -34,7 +34,7 @@ public class Pickup : MonoBehaviour {
         
         if (itemHeld)
         {
-            grid.CheckCurrentPosition(heldItem);
+            grid.MarkSnapPosition(heldItem);
 
             HandleMouseZoom();
 

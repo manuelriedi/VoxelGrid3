@@ -29,9 +29,8 @@ public class ProceduralGrid : MonoBehaviour
     private int levelsDestroyed = 0;
 
     private Color32[] colors;
-    private Color32 gridColor = new Color(0, 0, 255);
-    private Color32 markColor = new Color(0, 255f, 0);
-    private int oldCellToMark = 0;
+    private Color32 gridColor = new Color(0, 0, 255);   //245,94,97
+    private Color32 markColor = new Color(0, 255f, 0);  //201,218,248
 
     void Awake()
     {
@@ -40,6 +39,7 @@ public class ProceduralGrid : MonoBehaviour
 
     void Start()
     {
+        
         onlyChildren = new List<Transform>();
         InitCells();
         vertexOffset = cellSize * 0.5f;
@@ -57,40 +57,44 @@ public class ProceduralGrid : MonoBehaviour
     }
 
 
-    public void CheckCurrentPosition(Carriable tetro)
+    public void MarkSnapPosition(Carriable tetro)
     {
         UpdateMesh(); //TODO: Do this on a other way
+        
+        
         tetromino = tetro;
-
-        float lowestCubeY = float.MaxValue;
-        if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)
-        ) //Check if tetromino is above the play field
+        
+        
+        if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above the play field
         {
-            lowestChild = null;
+            
             Transform parent = tetromino.GetComponent<Transform>();
             Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
+            
+            int[] tempMarkCells = new int[childrenWithParent.Length-1]; //-1 because only children are relevant
+            int marksCounter = 0;
             
             foreach (Transform child in childrenWithParent)
             {
                 if (child != parent)
                 {
                     var p = child.gameObject.transform.position;
-
-                    //Check if all cubes of tetromino inside x- and z- axis of play fileds
                     for (int i = 0; i <= (vertices.Length - 4) / gridLevels; i += 4)
                     {
                         if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z &&
                             p.z <= vertices[i + 3].z)
                         {
-                            if (p.y < lowestCubeY)
-                            {
-                                lowestCubeY = p.y;
-                                lowestChild = child;
-                                MarkCell(i + (4 * cellsPerLevel * (gridLevels - 1)));
-                            }
+                            int markPosition = i + (4 * cellsPerLevel * (gridLevels - 1));
+                            tempMarkCells[marksCounter] = markPosition;
+                            marksCounter++;
                         }
                     }
                 }
+            }
+            //Marks cells for every single cube
+            if (marksCounter == childrenWithParent.Length-1)
+            {
+                MarkCell(tempMarkCells);
             }
         }
         
@@ -130,14 +134,11 @@ public class ProceduralGrid : MonoBehaviour
                                 lowestCubeY = p.y;
                                 lowestChild = child;
                                 snapPosition = GetRasterPosition(cellId);
-
-                                //MarkCell(i + (4 * cellsPerLevel * (gridLevels - 1)));
                             }
 
                             tempChilds.Add(child);
                             countCubes++;
                         }
-
                         cellId++;
                     }
                 }
@@ -374,8 +375,7 @@ public class ProceduralGrid : MonoBehaviour
 
     void UpdateMesh()
     {
-        //mesh.Clear();
-
+        mesh.Clear();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
@@ -385,30 +385,25 @@ public class ProceduralGrid : MonoBehaviour
         {
             colors[i] = gridColor;
         }
-
         mesh.colors32 = colors;
     }
 
-    void MarkCell(int cellToMark)
+    void MarkCell(int[] cellsToMark)
     {
-        colors[oldCellToMark + 0] = gridColor;
-        colors[oldCellToMark + 1] = gridColor;
-        colors[oldCellToMark + 2] = gridColor;
-        colors[oldCellToMark + 3] = gridColor;
-
         for (int i = 0; i < mesh.vertices.Length; i++)
         {
-            if (i == cellToMark)
+            foreach (var ctm in cellsToMark)
             {
-                colors[i + 0] = markColor;
-                colors[i + 1] = markColor;
-                colors[i + 2] = markColor;
-                colors[i + 3] = markColor;
-                i += 4;
+                if (i == ctm)
+                {
+                    colors[i + 0] = markColor;
+                    colors[i + 1] = markColor;
+                    colors[i + 2] = markColor;
+                    colors[i + 3] = markColor;
+                    i += 4;
+                }
             }
         }
-
-        oldCellToMark = cellToMark;
         mesh.colors32 = colors;
     }
 }
