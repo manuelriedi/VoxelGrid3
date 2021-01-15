@@ -10,6 +10,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class PauseMenuButtons : MonoBehaviour {
 
+    public GameObject pausePanel;
     public Button restartButton;
     public Button quitButton;
     public GameObject reticle;
@@ -21,8 +22,7 @@ public class PauseMenuButtons : MonoBehaviour {
         restartButton.onClick.AddListener(RestartGame);
         quitButton.onClick.AddListener(QuitGame);
         
-        restartButton.gameObject.SetActive(false);
-        quitButton.gameObject.SetActive(false);
+        pausePanel.SetActive(false);
         reticle.SetActive(true);
         fpsController.enabled = true;
         menuVisible = false;
@@ -31,23 +31,17 @@ public class PauseMenuButtons : MonoBehaviour {
     private void Update() {
         if (Input.GetKeyUp(KeyCode.Escape)) {
             menuVisible = !menuVisible;
-            restartButton.gameObject.SetActive(menuVisible);
-            quitButton.gameObject.SetActive(menuVisible);
+            pausePanel.SetActive(menuVisible);
             reticle.SetActive(!menuVisible);
             fpsController.enabled = !menuVisible;
-        } 
-        // else if (Input.GetMouseButtonUp(0) && menuVisible) {
-        //     
-        // }
+        }
     }
 
     public void RestartGame() {
-        Debug.Log("RestartGame");
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void QuitGame() {
-        Debug.Log("QuitGame");
         Application.Quit();
     }
 }

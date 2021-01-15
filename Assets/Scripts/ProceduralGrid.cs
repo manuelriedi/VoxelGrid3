@@ -37,6 +37,8 @@ public class ProceduralGrid : MonoBehaviour
 
     void Start()
     {
+        gridSize = PlayerPrefs.GetInt("gridSize", gridSize);
+
         onlyChildren = new List<Transform>();
         InitCells();
         vertexOffset = cellSize * 0.5f;
