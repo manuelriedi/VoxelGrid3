@@ -29,8 +29,12 @@ public class Pickup : MonoBehaviour {
     void Start() { }
 
     // Update is called once per frame
-    private void Update() {
-        if (itemHeld) {
+    private void Update()
+    {
+        
+        if (itemHeld)
+        {
+            grid.MarkSnapPosition(heldItem);
             HandleMouseZoom();
 
             if (Input.GetMouseButtonUp(0) && Cursor.lockState == CursorLockMode.Locked) {
@@ -86,12 +90,18 @@ public class Pickup : MonoBehaviour {
     }
 
     private void DropHeldItem() {
-        heldItem.DropObject();
-
-        grid.TransToRasterPosition(ref heldItem);
-
-        heldItem = null;
-        itemHeld = false;
+        
+        if (!grid.lookTetrominoAdding)
+        {
+            heldItem.DropObject();
+            grid.TryToSnapPosition(ref heldItem);
+            heldItem = null;
+            itemHeld = false;
+        }
+        else
+        {
+            Debug.Log("Wait until last tetromino is down... ");
+        }
     }
 
     void HandleMouseZoom() {
