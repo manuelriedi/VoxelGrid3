@@ -299,8 +299,6 @@ GameObject:
   - component: {fileID: 6034696241913299986}
   - component: {fileID: 4389553801878506546}
   - component: {fileID: 2638349075293658132}
-  - component: {fileID: 595634076790656431}
-  - component: {fileID: -5564817653716740454}
   m_Layer: 0
   m_Name: Z_Tetremino
   m_TagString: Untagged
@@ -415,33 +413,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   distance: 2
---- !u!114 &595634076790656431
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8258396478687912312}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57a8c319f41934e4b88666988ba0d4ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  grid: {fileID: 0}
---- !u!114 &-5564817653716740454
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8258396478687912312}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b7b67c57015993145893cf3e4de3abc7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  stopSpawing: 0
-  spawnObjects: []
 --- !u!1 &8696203628152865726
 GameObject:
   m_ObjectHideFlags: 0

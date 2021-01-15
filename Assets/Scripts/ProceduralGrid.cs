@@ -197,6 +197,7 @@ public class ProceduralGrid : MonoBehaviour
                 SaveCubePositions();
                 DestroyFullLevels();
                 PrintCurrentCellOccupations();
+                FindObjectOfType<TimedTetrominos>().LoadNewTetro();
                 break;
             }
             else
