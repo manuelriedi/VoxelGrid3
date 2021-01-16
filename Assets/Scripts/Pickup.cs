@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.UI;
 
-enum HoldRotation {
+public enum HoldRotation {
     Left,
     Right,
     Up,
@@ -25,8 +26,22 @@ public class Pickup : MonoBehaviour {
 
     [Range(2.5f, 25.0f)]
     public float zoomSmoothing = 5f;
+    
+    // Store buttons to register handlers
+    public Button pickupButton;
+    public Button turnUpButton;
+    public Button turnLeftButton;
+    public Button turnDownButton;
+    public Button turnRightButton;
 
-    void Start() { }
+
+    void Start() {
+        pickupButton.onClick.AddListener(PressPickupButton);
+        turnUpButton.onClick.AddListener(() => RotateHeldItem(HoldRotation.Up));
+        turnLeftButton.onClick.AddListener(() => RotateHeldItem(HoldRotation.Left));
+        turnDownButton.onClick.AddListener(() => RotateHeldItem(HoldRotation.Down));
+        turnRightButton.onClick.AddListener(() => RotateHeldItem(HoldRotation.Right));
+    }
 
     // Update is called once per frame
     private void Update()
@@ -60,8 +75,7 @@ public class Pickup : MonoBehaviour {
             }
         }
         else {
-            if (Physics.Raycast(transform.position, transform.forward, out var hit, maxDistance) &&
-                FindInHierarchy<Carriable>(hit.collider, out var carriable)) {
+            if (RaycastCarriable(out var hit, out var carriable)) {
 
                 if (Input.GetMouseButtonUp(0)) {
                     carriable.PickUp(this, hit);
@@ -89,6 +103,16 @@ public class Pickup : MonoBehaviour {
         }
     }
 
+    private void PressPickupButton() {
+        if (itemHeld) {
+            DropHeldItem();
+        } else if (RaycastCarriable(out var hit, out var carriable)) {
+            carriable.PickUp(this, hit);
+            heldItem = carriable;
+            itemHeld = true;
+        }
+    }
+
     private void DropHeldItem() {
         
         if (!grid.lookTetrominoAdding)
@@ -102,6 +126,16 @@ public class Pickup : MonoBehaviour {
         {
             Debug.Log("Wait until last tetromino is down... ");
         }
+    }
+
+    private bool RaycastCarriable(out RaycastHit hit, out Carriable carriable) {
+        if (Physics.Raycast(transform.position, transform.forward, out hit, maxDistance) &&
+            FindInHierarchy(hit.collider, out carriable)) {
+            return true;
+        }
+
+        carriable = null;
+        return false;
     }
 
     void HandleMouseZoom() {
@@ -122,6 +156,7 @@ public class Pickup : MonoBehaviour {
     }
 
     private void RotateHeldItem(HoldRotation rotation) {
+        if (!itemHeld) return;
         var worldAxisRight = NearestWorldAxis(transform.right);
         var worldAxisForward = NearestWorldAxis(transform.forward);
         var worldAxisUp = NearestWorldAxis(transform.up);
