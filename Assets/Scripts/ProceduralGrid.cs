@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralGrid : MonoBehaviour
@@ -34,6 +36,12 @@ public class ProceduralGrid : MonoBehaviour
 
     public bool lookTetrominoAdding = false;
 
+    public LevelText levelText; 
+    
+    public Text statusText;
+    private float textSetTime = 0;
+    public Image backgroundPanel;
+
     void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
@@ -41,14 +49,19 @@ public class ProceduralGrid : MonoBehaviour
 
     void Start()
     {
+        backgroundPanel.enabled = false;
+        levelText.UpdateScore(0);
+        
         gridSize = PlayerPrefs.GetInt("gridSize", gridSize);
 
         onlyChildren = new List<Transform>();
+        
         InitCells();
         vertexOffset = cellSize * 0.5f;
         cellsPerLevel = gridSize * gridSize;
         MakeProceduralGrid();
         InitializeMesh();
+        
     }
 
     private void InitCells()
@@ -148,16 +161,45 @@ public class ProceduralGrid : MonoBehaviour
             }
             else
             {
-                Debug.Log("Position too far out of field");
+                SetStatusMessage("You positioned the tetromino to far out of field");
                 tetromino.transform.position = TetrominoDefaultPosition();
             }
         }
         else
         {
-            Debug.Log("Position to low");
+            SetStatusMessage("You positioned the tetromino to low");
             tetromino.transform.position = TetrominoDefaultPosition();
         }
     }
+
+    public void SetStatusMessage(String message)
+    {
+        statusText.text = message;
+        textSetTime = Time.time * 1000;
+        backgroundPanel.enabled = true;
+    }
+
+    private void Update()
+    {
+        if ((Time.time * 1000) - textSetTime > 2500)
+        {
+            statusText.text = "";
+            backgroundPanel.enabled = false;
+        }
+
+        // if (gridSize != SetGridSize())
+        // {
+        //     gridSize = SetGridSize();
+        //     InitGrid();
+        // }
+        
+
+    }
+
+    // public int SetGridSize()
+    // {
+    //     return 3;
+    // }
 
     private void SnapPosition()
     {
@@ -241,7 +283,7 @@ public class ProceduralGrid : MonoBehaviour
 
             if (p.y > vertices[vertices.Length - 4].y)
             {
-                Debug.Log("Game Over");
+                SetStatusMessage("GAME OVER");
                 break;
             }
 
@@ -263,8 +305,7 @@ public class ProceduralGrid : MonoBehaviour
 
     private Vector3 TetrominoDefaultPosition()
     {
-        return new Vector3((gridSize * cellSize) + 2 * cellSize, gridOffset.y,
-            0); //TODO: Define standart position for tetrominos
+        return new Vector3((gridSize * cellSize) + 2 * cellSize, gridOffset.y, 0); //TODO: Define standart position for tetrominos
     }
 
     private void PrintCurrentCellOccupations()
@@ -274,7 +315,8 @@ public class ProceduralGrid : MonoBehaviour
             .ToList()
             .ForEach(item => { count++; /*Debug.Log("Cell " + item.Key + " : " + item.Value.name); */ });
         Debug.Log("Total occupied cells: " + count + " of " + cells.Count);
-        Debug.Log("Levels Destroyed: " + levelsDestroyed);
+        levelText.UpdateScore(levelsDestroyed);
+  
     }
 
     private void DestroyFullLevels()

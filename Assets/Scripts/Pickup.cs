@@ -124,7 +124,7 @@ public class Pickup : MonoBehaviour {
         }
         else
         {
-            Debug.Log("Wait until last tetromino is down... ");
+            grid.SetStatusMessage("Wait until last tetromino is down... ");
         }
     }
 

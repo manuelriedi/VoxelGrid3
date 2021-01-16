@@ -4,7 +4,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Text))]
 public class LevelText : MonoBehaviour {
     
-    public string textFormat = "Cleared levels: {0}";
+    public string textFormat = "Total Cleared Levels: {0}";
     public int score = 0;
 
     private int oldScore;
@@ -14,6 +14,7 @@ public class LevelText : MonoBehaviour {
         this.self = GetComponent<Text>();
 
         oldScore = score;
+        self.text = string.Format(textFormat, score);
     }
 
     private void Update() {
