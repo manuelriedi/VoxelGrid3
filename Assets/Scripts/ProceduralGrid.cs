@@ -200,6 +200,7 @@ public class ProceduralGrid : MonoBehaviour
             if (!child.Equals(lowestChild))
             {
                 child.gameObject.transform.SetParent(lowestChild.transform, true);
+                child.tag = "Tetromino";
                 onlyChildren.Add(child);
             }
         }
