@@ -32,7 +32,7 @@ public class TimedTetrominos : MonoBehaviour
 
         if (tetrominosInGame.Length > 3)
         {
-            FindObjectOfType<GameOver>().GameIsOver();
+            grid.SetStatusMessage("GAME OVER");
         }
         else if (deltaTime <= 0)
         {
