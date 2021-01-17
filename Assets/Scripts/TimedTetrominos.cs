@@ -9,6 +9,7 @@ public class TimedTetrominos : MonoBehaviour
     public bool stopSpawing = false;
     public ProceduralGrid grid;
     public GameObject[] tetrominos;
+    // Timer till next tetromino is loaded
     public float maxTime = 7000f; //7s
     private float timeNow;
     float deltaTime;
@@ -22,13 +23,15 @@ public class TimedTetrominos : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// Detect if game is over if not and timer is up trigger tetromino generation
+    /// </summary>
     void Update()
     {
         GameObject[] tetrominosInGame = GameObject.FindGameObjectsWithTag("OnHeap");
 
         if (tetrominosInGame.Length > 3)
         {
-            Debug.Log("Game Over");
             FindObjectOfType<GameOver>().GameIsOver();
         }
         else if (deltaTime <= 0)
@@ -42,20 +45,31 @@ public class TimedTetrominos : MonoBehaviour
         }
     }
 
-   void LoadNewTetro()
+    /// <summary>
+    /// Initialize next Tetromino and place it on tetromino heap
+    /// </summary>
+    void LoadNewTetro()
     {
-
-        GameObject[] tetrominosInGame = GameObject.FindGameObjectsWithTag("OnHeap");
-
-        float offset = 0.5f;
-        float spacing = tetrominosInGame.Length * offset;
+        float offset = getHeightHeap();
 
         int selection = UnityEngine.Random.Range(0, tetrominos.Length - 1);
         float y = transform.position.y;
-        GameObject tetromino = Instantiate(tetrominos[selection], new Vector3(transform.position.x, y + spacing, transform.position.z), Quaternion.identity);
+        GameObject tetromino = Instantiate(tetrominos[selection], new Vector3(transform.position.x, y + offset, transform.position.z), Quaternion.identity);
         tetromino.tag = "OnHeap";
         tetromino.transform.localScale = new Vector3(grid.cellSize, grid.cellSize, grid.cellSize);
 
+    }
+
+    float getHeightHeap() {
+        float spacing = 0;
+        GameObject[] tetrominosInGame = GameObject.FindGameObjectsWithTag("OnHeap");
+        foreach (GameObject tetrominoInGame in tetrominosInGame)
+        {
+            MeshRenderer renderer = tetrominoInGame.GetComponent<MeshRenderer>();
+            spacing += renderer.bounds.size.y;
+        }
+
+        return spacing;
     }
 
 
