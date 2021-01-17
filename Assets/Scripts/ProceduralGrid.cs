@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,37 +6,34 @@ using UnityEngine.UI;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralGrid : MonoBehaviour
 {
-    Mesh mesh;
-    Vector3[] vertices;
-    int[] triangles;
+    private Mesh mesh;
+    private Vector3[] vertices;
+    private int[] triangles;
 
     public float cellSize;
     public int gridSize;
     public int gridLevels;
     public Vector3 gridOffset;
-
-    private float vertexOffset;
-    private Dictionary<int, GameObject> cells = new Dictionary<int, GameObject>();
-    private int cellsPerLevel;
-
-    private Vector3 snapPosition;
-    private List<GameObject> childCubes = new List<GameObject>();
-    List<Transform> onlyChildren;
-
-    Carriable tetromino;
-
-    List<Transform> tempChilds = new List<Transform>();
-    Transform lowestChild;
-    private int levelsDestroyed = 0;
-
-    private Color32[] colors;
-    private Color32 gridColor = new Color(0, 0, 255);   //245,94,97
-    private Color32 markColor = new Color(0, 255f, 0);  //201,218,248
-
-    public bool lookTetrominoAdding = false;
-
-    public LevelText levelText; 
     
+    private Carriable tetromino;
+    private Vector3 snapPosition;
+    public bool lookTetrominoAdding = false;
+    
+    private readonly Dictionary<int, GameObject> cells = new Dictionary<int, GameObject>();
+    private float vertexOffset;
+    private int cellsPerLevel;
+    private int levelsDestroyed = 0;
+    
+    private List<GameObject> childCubes = new List<GameObject>();
+    private List<Transform> onlyChildren;
+    private List<Transform> tempChilds = new List<Transform>();
+    private Transform lowestChild;
+    
+    private Color32[] colors;
+    private Color32 gridColor = new Color(245f,94f,97f);
+    private Color32 markColor = new Color(0f, 0f, 238f); 
+    
+    public LevelText levelText;
     public Text statusText;
     private float textSetTime = 0;
     public Image backgroundPanel;
@@ -49,21 +45,21 @@ public class ProceduralGrid : MonoBehaviour
 
     void Start()
     {
-        backgroundPanel.enabled = false;
         levelText.UpdateScore(0);
+        backgroundPanel.enabled = false;
         
         gridSize = PlayerPrefs.GetInt("gridSize", gridSize);
-
         onlyChildren = new List<Transform>();
-        
         InitCells();
         vertexOffset = cellSize * 0.5f;
         cellsPerLevel = gridSize * gridSize;
         MakeProceduralGrid();
         InitializeMesh();
-        
     }
 
+    /// <summary>
+    /// Initializes the entire playfield with empty cells
+    /// </summary>
     private void InitCells()
     {
         for (int i = 0; i < (gridSize * gridSize * gridLevels); i++)
@@ -72,17 +68,28 @@ public class ProceduralGrid : MonoBehaviour
         }
     }
     
+    private void Update()
+    {
+        if ((Time.time * 1000) - textSetTime > 2500)
+        {
+            statusText.text = "";
+            backgroundPanel.enabled = false;
+        }
+    }
+    
+    /// <summary>
+    /// Creates a gridded mark on the playing field that indicates where the tetromino will fall before it is dropped
+    /// </summary>
     public void MarkSnapPosition(Carriable tetro)
     {
         CleanMarkers();
         tetromino = tetro;
         
-        if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above the play field
+        if (tetromino.transform.position.y >= vertices[vertices.Length - 4].y + vertexOffset)
         {
             Transform parent = tetromino.GetComponent<Transform>();
             Transform[] childrenWithParent = tetromino.GetComponentsInChildren<Transform>();
-            
-            int[] tempMarkCells = new int[childrenWithParent.Length-1]; //-1 because only children are relevant
+            int[] tempMarkCells = new int[childrenWithParent.Length-1];
             int marksCounter = 0;
             
             foreach (Transform child in childrenWithParent)
@@ -101,24 +108,27 @@ public class ProceduralGrid : MonoBehaviour
                     }
                 }
             }
-            //Marks cells for every single cube
+
             if (marksCounter == childrenWithParent.Length-1)
             {
                 MarkCell(tempMarkCells);
             }
         }
     }
-
+    
+    /// <summary>
+    /// Searches for a suitable raster position on the board after the tetromino has been dropped. 
+    /// </summary>
     public void TryToSnapPosition(ref Carriable tetro)
     {
         onlyChildren.Clear();
         tempChilds.Clear();
-
         tetromino = tetro;
         childCubes.Clear();
         snapPosition = new Vector3();
         float lowestCubeY = float.MaxValue;
-        if (tetromino.transform.position.y >= (vertices[vertices.Length - 4].y + vertexOffset)) //Check if tetromino is above the play field
+        
+        if (tetromino.transform.position.y >= vertices[vertices.Length - 4].y + vertexOffset) //Check if tetromino is above the play field
         {
             lowestChild = null;
             Transform parent = tetromino.GetComponent<Transform>();
@@ -131,7 +141,7 @@ public class ProceduralGrid : MonoBehaviour
                 {
                     var p = child.gameObject.transform.position;
 
-                    //Check if all cubes of tetromino inside x- and z- axis of play fileds
+                    //Check if all childs inside x- and z- axis of play fileds
                     for (int i = 0; i <= (vertices.Length - 4) / gridLevels; i += 4)
                     {
                         if (p.x >= vertices[i].x && p.x <= vertices[i + 3].x && p.z >= vertices[i].z &&
@@ -153,7 +163,7 @@ public class ProceduralGrid : MonoBehaviour
             }
             CleanMarkers();
 
-            //If all cubes of tetromino inside the play field, snap its positions
+            //Snaps only position, if all cubes inside play field
             if (countCubes == childrenWithParent.Length - 1)
             {
                 SnapPosition();
@@ -172,35 +182,16 @@ public class ProceduralGrid : MonoBehaviour
         }
     }
 
-    public void SetStatusMessage(String message)
+    public void SetStatusMessage(string message)
     {
         statusText.text = message;
         textSetTime = Time.time * 1000;
         backgroundPanel.enabled = true;
     }
 
-    private void Update()
-    {
-        if ((Time.time * 1000) - textSetTime > 2500)
-        {
-            statusText.text = "";
-            backgroundPanel.enabled = false;
-        }
-
-        // if (gridSize != SetGridSize())
-        // {
-        //     gridSize = SetGridSize();
-        //     InitGrid();
-        // }
-        
-
-    }
-
-    // public int SetGridSize()
-    // {
-    //     return 3;
-    // }
-
+    /// <summary>
+    /// Makes the lowest part of the tetromino move to the defined snaping position. 
+    /// </summary>
     private void SnapPosition()
     {
         onlyChildren.Add(lowestChild); //Add lowest child first because of ground detection
@@ -212,7 +203,7 @@ public class ProceduralGrid : MonoBehaviour
                 onlyChildren.Add(child);
             }
         }
-
+        
         lowestChild.transform.parent = null;
         lowestChild.transform.position = snapPosition;
         tetromino.gameObject.SetActive(false);
@@ -221,6 +212,10 @@ public class ProceduralGrid : MonoBehaviour
         InvokeRepeating("FallDownUntilCollision", 1.0f, 1.0f);
     }
 
+    /// <summary>
+    /// Drops the tetromino down one whole cell at a time at a given rate until it collides with something (either the
+    /// ground or with another tetromino)
+    /// </summary>
     private void FallDownUntilCollision()
     {
         bool noCollision = true;
@@ -258,13 +253,18 @@ public class ProceduralGrid : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Checks for each child of the tetromino if it collides with an already full Celle.
+    /// </summary>
+    /// <returns>
+    /// Return true if a child collided with a full cell
+    /// </returns>
     private bool ChildCollided(Vector3 newPos)
     {
         foreach (var cell in cells)
         {
             if (cell.Value != null)
             {
-                //Check if new position collides with a full cell
                 if (cell.Value.GetComponent<Collider>().bounds.Contains(newPos))
                 {
                     return true;
@@ -273,7 +273,7 @@ public class ProceduralGrid : MonoBehaviour
         }
         return false;
     }
-
+    
     private void SaveCubePositions()
     {
         int cellId = 0;
@@ -303,11 +303,18 @@ public class ProceduralGrid : MonoBehaviour
         lookTetrominoAdding = false;
     }
 
+    /// <summary>
+    /// Set the tetromino on a defaultposition, which is always positioned next to the playing field depending
+    /// on the grid size and grid position
+    /// </summary>
     private Vector3 TetrominoDefaultPosition()
     {
         return new Vector3((gridSize * cellSize) + 2 * cellSize, gridOffset.y, 0); //TODO: Define standart position for tetrominos
     }
 
+    /// <summary>
+    /// Prints occupation of cells to console
+    /// </summary>
     private void PrintCurrentCellOccupations()
     {
         int count = 0;
@@ -316,9 +323,12 @@ public class ProceduralGrid : MonoBehaviour
             .ForEach(item => { count++; /*Debug.Log("Cell " + item.Key + " : " + item.Value.name); */ });
         Debug.Log("Total occupied cells: " + count + " of " + cells.Count);
         levelText.UpdateScore(levelsDestroyed);
-  
     }
 
+    /// <summary>
+    /// Finds full levels and destroys them accordingly.
+    /// It also moves down the tetreminos that are above the destroyed levels. 
+    /// </summary>
     private void DestroyFullLevels()
     {
         bool moveUperLevels = false;
@@ -327,7 +337,7 @@ public class ProceduralGrid : MonoBehaviour
             if (!cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel))
                 .Any(x => x.Value == null))
             {
-                //Destroy full Level (with LINQ)
+                //Destroy full Level
                 var under = cells.Where(x => (x.Key >= i * cellsPerLevel) && (x.Key < (i + 1) * cellsPerLevel))
                     .Select(c => c).ToList();
                 foreach (var item in under)
@@ -335,7 +345,6 @@ public class ProceduralGrid : MonoBehaviour
                     Destroy(item.Value);
                     cells[item.Key] = null;
                 }
-
                 moveUperLevels = true;
                 levelsDestroyed++;
             }
@@ -355,13 +364,15 @@ public class ProceduralGrid : MonoBehaviour
                         cells[item.Key] = null;
                     }
                 }
-
                 moveUperLevels = false;
                 DestroyFullLevels();
             }
         }
     }
 
+    /// <returns>
+    /// Return the rastered position for every child of the tetromino
+    /// </returns>
     private Vector3 GetRasterPosition(int i)
     {
         Vector3 pos;
@@ -372,6 +383,9 @@ public class ProceduralGrid : MonoBehaviour
         return pos;
     }
 
+    /// <summary>
+    /// Creates new playfield based on the filed size and number of grid sizes set by the user.
+    /// </summary>
     private void MakeProceduralGrid()
     {
         float floorHight = 0f;
@@ -409,6 +423,9 @@ public class ProceduralGrid : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Creates a mesh over the playing field. It also colorizes the playfield initially
+    /// </summary>
     void InitializeMesh()
     {
         mesh.Clear();
@@ -423,16 +440,10 @@ public class ProceduralGrid : MonoBehaviour
         }
         mesh.colors32 = colors;
     }
-
-    void CleanMarkers()
-    {
-        for (int i = 0; i < mesh.vertices.Length; i++)
-        {
-            colors[i] = gridColor;
-        }
-        mesh.colors32 = colors;
-    }
-
+    
+    /// <summary>
+    /// Set markings that indicate the grid positions when you move the tetromino over the playfield. 
+    /// </summary>
     void MarkCell(int[] cellsToMark)
     {
         for (int i = 0; i < mesh.vertices.Length; i++)
@@ -448,6 +459,19 @@ public class ProceduralGrid : MonoBehaviour
                     i += 4;
                 }
             }
+        }
+        mesh.colors32 = colors;
+    }
+    
+    /// <summary>
+    /// Deletes the old playfield markings that indicate the grid positions when you move the tetromino over
+    /// the playfield. 
+    /// </summary>
+    void CleanMarkers()
+    {
+        for (int i = 0; i < mesh.vertices.Length; i++)
+        {
+            colors[i] = gridColor;
         }
         mesh.colors32 = colors;
     }
